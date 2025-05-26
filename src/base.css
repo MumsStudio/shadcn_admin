@@ -3,7 +3,11 @@
   margin: 0;
   letter-spacing: 1px !important;
 }
-
+.text-node *:not(input):not(textarea):not(button):not(select):not(span):not(font) {
+  all: revert!important;
+  margin: 0;
+  letter-spacing: 1px!important;
+}
 .markdown-menu {
   background: var(--color-background);
 }
@@ -65,6 +69,7 @@
   margin: 0.7em 0 0.2em !important;
   font-weight: bold !important;
 }
+
 .markdown table {
   border-radius: 8px !important;
   border: 1px solid #ccc !important;
@@ -158,3 +163,67 @@ li.heading-3 {
 .ProseMirror .resizable-video-container {
   user-select: none !important;
 }
+
+:root {
+  --indent-base: 20px;
+}
+
+.tt-indent-1 {
+  margin-left: var(--indent-base) !important;
+}
+
+.tt-indent-2 {
+  margin-left: calc(2 * var(--indent-base)) !important;
+}
+
+.tt-indent-3 {
+  margin-left: calc(3 * var(--indent-base)) !important;
+}
+
+.tt-indent-4 {
+  margin-left: calc(4 * var(--indent-base)) !important;
+}
+
+.tt-indent-5 {
+  margin-left: calc(5 * var(--indent-base)) !important;
+}
+
+.tt-indent-6 {
+  margin-left: calc(6 * var(--indent-base)) !important;
+}
+
+.tt-indent-7 {
+  margin-left: calc(7 * var(--indent-base)) !important;
+}
+
+.tt-indent-8 {
+  margin-left: calc(8 * var(--indent-base)) !important;
+}
+.board-controls button {
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.board-controls button:hover {
+  background-color: #f5f5f5;
+}
+.board-container {
+  transition: all 0.3s ease;
+}
+
+.board-container:hover {
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.board-controls button {
+  transition: all 0.2s;
+}
+
+.board-controls button:hover {
+  background-color: #f5f5f5 !important;
+}
+/* 继续根据需要添加更多缩进级别 */

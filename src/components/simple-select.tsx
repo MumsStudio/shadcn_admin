@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
-import { IconChevronDown, IconCheck } from '@tabler/icons-react'
-import { cn } from '@/lib/utils'
+import { useState, useRef, useEffect } from 'react';
+import { IconChevronDown, IconCheck } from '@tabler/icons-react';
+import { cn } from '@/lib/utils';
+
 
 type Item = {
   label: string
@@ -14,6 +15,7 @@ type SimpleSelectProps = {
   onValueChange?: (value: string) => void
   items: Item[]
   className?: string
+  itemClassName?: string
 }
 
 export function SimpleSelect({
@@ -22,6 +24,7 @@ export function SimpleSelect({
   onValueChange,
   items,
   className,
+  itemClassName,
 }: SimpleSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedValue, setSelectedValue] = useState(value || defaultValue)
@@ -97,7 +100,10 @@ export function SimpleSelect({
       </div>
       {isOpen && (
         <div
-          className='bg-popover absolute z-50 mt-1 w-[180px] rounded-md border shadow-lg'
+          className={cn(
+            'bg-popover absolute z-50 mt-1 w-[180px] rounded-md border shadow-lg',
+            itemClassName
+          )}
           style={{ maxHeight: '200px', overflowY: 'auto' }}
           onMouseEnter={() => {
             if (closeTimeout) clearTimeout(closeTimeout)

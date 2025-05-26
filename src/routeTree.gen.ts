@@ -13,7 +13,6 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexImport } from './routes/_authenticated/index'
-import { Route as WordDetailImport } from './routes/word/detail'
 import { Route as errors503Import } from './routes/(errors)/503'
 import { Route as errors500Import } from './routes/(errors)/500'
 import { Route as errors404Import } from './routes/(errors)/404'
@@ -33,6 +32,8 @@ import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticat
 import { Route as AuthenticatedHelpCenterIndexImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedChatsIndexImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexImport } from './routes/_authenticated/apps/index'
+import { Route as WordDetailIdImport } from './routes/word/detail.$id'
+import { Route as WhiteboardDetailIdImport } from './routes/whiteboard/detail.$id'
 import { Route as AuthenticatedSettingsNotificationsImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceImport } from './routes/_authenticated/settings/appearance'
@@ -49,12 +50,6 @@ const AuthenticatedIndexRoute = AuthenticatedIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-
-const WordDetailRoute = WordDetailImport.update({
-  id: '/word/detail',
-  path: '/word/detail',
-  getParentRoute: () => rootRoute,
 } as any)
 
 const errors503Route = errors503Import.update({
@@ -177,6 +172,18 @@ const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexImport.update({
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
+const WordDetailIdRoute = WordDetailIdImport.update({
+  id: '/word/detail/$id',
+  path: '/word/detail/$id',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const WhiteboardDetailIdRoute = WhiteboardDetailIdImport.update({
+  id: '/whiteboard/detail/$id',
+  path: '/whiteboard/detail/$id',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AuthenticatedSettingsNotificationsRoute =
   AuthenticatedSettingsNotificationsImport.update({
     id: '/notifications',
@@ -293,13 +300,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof errors503Import
       parentRoute: typeof rootRoute
     }
-    '/word/detail': {
-      id: '/word/detail'
-      path: '/word/detail'
-      fullPath: '/word/detail'
-      preLoaderRoute: typeof WordDetailImport
-      parentRoute: typeof rootRoute
-    }
     '/_authenticated/': {
       id: '/_authenticated/'
       path: '/'
@@ -334,6 +334,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/notifications'
       preLoaderRoute: typeof AuthenticatedSettingsNotificationsImport
       parentRoute: typeof AuthenticatedSettingsRouteImport
+    }
+    '/whiteboard/detail/$id': {
+      id: '/whiteboard/detail/$id'
+      path: '/whiteboard/detail/$id'
+      fullPath: '/whiteboard/detail/$id'
+      preLoaderRoute: typeof WhiteboardDetailIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/word/detail/$id': {
+      id: '/word/detail/$id'
+      path: '/word/detail/$id'
+      fullPath: '/word/detail/$id'
+      preLoaderRoute: typeof WordDetailIdImport
+      parentRoute: typeof rootRoute
     }
     '/_authenticated/apps/': {
       id: '/_authenticated/apps/'
@@ -459,12 +473,13 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/word/detail': typeof WordDetailRoute
   '/': typeof AuthenticatedIndexRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/whiteboard/detail/$id': typeof WhiteboardDetailIdRoute
+  '/word/detail/$id': typeof WordDetailIdRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
@@ -486,12 +501,13 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/word/detail': typeof WordDetailRoute
   '/': typeof AuthenticatedIndexRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/whiteboard/detail/$id': typeof WhiteboardDetailIdRoute
+  '/word/detail/$id': typeof WordDetailIdRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
@@ -516,12 +532,13 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
-  '/word/detail': typeof WordDetailRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/whiteboard/detail/$id': typeof WhiteboardDetailIdRoute
+  '/word/detail/$id': typeof WordDetailIdRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
@@ -547,12 +564,13 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/word/detail'
     | '/'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/whiteboard/detail/$id'
+    | '/word/detail/$id'
     | '/apps'
     | '/chats'
     | '/help-center'
@@ -573,12 +591,13 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/word/detail'
     | '/'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/whiteboard/detail/$id'
+    | '/word/detail/$id'
     | '/apps'
     | '/chats'
     | '/help-center'
@@ -601,12 +620,13 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
-    | '/word/detail'
     | '/_authenticated/'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
+    | '/whiteboard/detail/$id'
+    | '/word/detail/$id'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
     | '/_authenticated/help-center/'
@@ -630,7 +650,8 @@ export interface RootRouteChildren {
   errors404Route: typeof errors404Route
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
-  WordDetailRoute: typeof WordDetailRoute
+  WhiteboardDetailIdRoute: typeof WhiteboardDetailIdRoute
+  WordDetailIdRoute: typeof WordDetailIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -645,7 +666,8 @@ const rootRouteChildren: RootRouteChildren = {
   errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
-  WordDetailRoute: WordDetailRoute,
+  WhiteboardDetailIdRoute: WhiteboardDetailIdRoute,
+  WordDetailIdRoute: WordDetailIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -669,7 +691,8 @@ export const routeTree = rootRoute
         "/(errors)/404",
         "/(errors)/500",
         "/(errors)/503",
-        "/word/detail"
+        "/whiteboard/detail/$id",
+        "/word/detail/$id"
       ]
     },
     "/_authenticated": {
@@ -727,9 +750,6 @@ export const routeTree = rootRoute
     "/(errors)/503": {
       "filePath": "(errors)/503.tsx"
     },
-    "/word/detail": {
-      "filePath": "word/detail.tsx"
-    },
     "/_authenticated/": {
       "filePath": "_authenticated/index.tsx",
       "parent": "/_authenticated"
@@ -749,6 +769,12 @@ export const routeTree = rootRoute
     "/_authenticated/settings/notifications": {
       "filePath": "_authenticated/settings/notifications.tsx",
       "parent": "/_authenticated/settings"
+    },
+    "/whiteboard/detail/$id": {
+      "filePath": "whiteboard/detail.$id.tsx"
+    },
+    "/word/detail/$id": {
+      "filePath": "word/detail.$id.tsx"
     },
     "/_authenticated/apps/": {
       "filePath": "_authenticated/apps/index.tsx",

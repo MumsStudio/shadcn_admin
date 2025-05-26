@@ -30,6 +30,10 @@ import {
   IconPhoto,
   IconVideo,
   IconPaperclip,
+  IconH4,
+  IconH5,
+  IconH6,
+  IconClipboard,
 } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import debounce from '@/utils/debounce'
@@ -169,6 +173,24 @@ export function LeftSelect({
       icon: <IconH3 className='h-4 w-4' />,
     },
     {
+      onClick: () => editor?.chain().focus().toggleHeading({ level: 4 }).run(),
+      isActive: editor?.isActive('heading', { level: 4 }),
+      title: '标题4',
+      icon: <IconH4 className='h-4 w-4' />,
+    },
+    {
+      onClick: () => editor?.chain().focus().toggleHeading({ level: 5 }).run(),
+      isActive: editor?.isActive('heading', { level: 5 }),
+      title: '标题5',
+      icon: <IconH5 className='h-4 w-4' />,
+    },
+    {
+      onClick: () => editor?.chain().focus().toggleHeading({ level: 6 }).run(),
+      isActive: editor?.isActive('heading', { level: 6 }),
+      title: '标题6',
+      icon: <IconH6 className='h-4 w-4' />,
+    },
+    {
       onClick: () => editor?.chain().focus().toggleBulletList().run(),
       isActive: editor?.isActive('bulletList'),
       title: '无序列表',
@@ -281,6 +303,20 @@ export function LeftSelect({
       },
     },
     {
+      icon: <IconClipboard className='mx-2 h-4 w-4' />,
+      title: '粘贴',
+      action: async () => {
+        if (editor && editor.view) {
+          try {
+            const text = await navigator.clipboard.readText()
+            editor.commands.insertContent(text)
+          } catch (err) {
+            console.error('Failed to read clipboard contents: ', err)
+          }
+        }
+      },
+    },
+    {
       icon: <IconTrash className='mx-2 h-4 w-4' />,
       title: '删除',
       action: () => {
@@ -353,6 +389,45 @@ export function LeftSelect({
           }
         }
         input.click()
+      },
+    },
+    {
+      icon: <IconPhoto className='mx-2 h-4 w-4' />,
+      title: '插入画板',
+      action: () => {
+        editor?.commands.setBoard({
+          width: '500px',
+          aspectRatio: '16/9',
+        })
+      },
+    },
+    {
+      icon: <IconPaperclip className='mx-2 h-4 w-4' />,
+      title: '插入链接',
+      action: () => {
+        const linkMenu = document.createElement('div')
+        linkMenu.className = 'absolute z-50 bg-white p-2 rounded shadow-lg'
+
+        import('@/components/link-drawer').then(({ LinkDrawer }) => {
+          const root = ReactDOM.createRoot(linkMenu)
+          root.render(
+            <LinkDrawer
+              onInsert={(text, url) =>
+                editor?.commands.setLink({ href: url, text: text || url })
+              }
+              onClose={() => document.body.removeChild(linkMenu)}
+              compact={true}
+            />
+          )
+        })
+
+        const rect = dropdownRef.current?.getBoundingClientRect()
+        if (rect) {
+          linkMenu.style.top = `${rect.bottom + 5}px`
+          linkMenu.style.left = `${rect.left}px`
+        }
+
+        document.body.appendChild(linkMenu)
       },
     },
   ]

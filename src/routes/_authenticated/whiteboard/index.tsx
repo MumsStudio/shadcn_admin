@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import Word from '@/features/word/word-menu'
+import { createFileRoute } from '@tanstack/react-router';
+import whiteboard from '@/features/whiteboard/index';
+
 
 export const Route = createFileRoute('/_authenticated/whiteboard/')({
-  component: Word,
+  component: whiteboard,
 })

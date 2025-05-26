@@ -156,13 +156,11 @@ export default function WordMenu() {
     const firstFolder = documents.find((doc) => doc.type === 'folder')
     if (firstFolder) {
       handleDocumentClick(firstFolder.id)
-      console.log('自动选中第一个文件夹:', firstFolder)
     }
   }, [documents])
 
   const handleDocumentClick = (id: string) => {
     setSelectedDocument(id)
-    console.log('点击文档:', currentDocuments, selectedDocument)
     const clickedDoc = findDocument(documents, id)
     if (!clickedDoc) return
 

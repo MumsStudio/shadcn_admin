@@ -1,64 +1,105 @@
-import { useState, useEffect, useCallback } from 'react'
-import {
-  IconAlignLeft,
-  IconAlignCenter,
-  IconAlignRight,
-  IconAlignJustified,
-  IconTextSize,
-  IconH1,
-  IconH2,
-  IconH3,
-  IconItalic,
-  IconBackground,
-  IconBold,
-  IconStrikethrough,
-  IconUnderline,
-  IconList,
-  IconListNumbers,
-  IconTypography,
-  IconHorse,
-  IconStar,
-  IconShare,
-  IconMenu,
-  IconUser,
-  IconHistory,
-  IconEye,
-  IconComet,
-} from '@tabler/icons-react'
-import { Color } from '@tiptap/extension-color'
-import FontSize from '@tiptap/extension-font-size'
-import Heading from '@tiptap/extension-heading'
-import Highlight from '@tiptap/extension-highlight'
-import Image from '@tiptap/extension-image'
-import Table from '@tiptap/extension-table'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TableRow from '@tiptap/extension-table-row'
-import TaskItem from '@tiptap/extension-task-item'
-import TaskList from '@tiptap/extension-task-list'
-import TextAlign from '@tiptap/extension-text-align'
-import TextStyle from '@tiptap/extension-text-style'
-import Underline from '@tiptap/extension-underline'
-import {
-  useEditor,
-  EditorContent,
-  BubbleMenu,
-  FloatingMenu,
-} from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-// import Video from '@fourwaves/tiptap-extension-video';
-import { Markdown } from 'tiptap-markdown'
-import { Main } from '@/components/layout/main'
-import { LeftSelect } from '@/components/left-select'
-import { SimpleSelect } from '@/components/simple-select'
-import { Video } from './components/video'
+import { useState, useEffect, useCallback } from 'react';
+import { IconAlignLeft, IconAlignCenter, IconAlignRight, IconAlignJustified, IconTextSize, IconH1, IconH2, IconH3, IconItalic, IconBackground, IconBold, IconStrikethrough, IconUnderline, IconList, IconListNumbers, IconTypography, IconHorse, IconStar, IconShare, IconMenu, IconUser, IconHistory, IconEye, IconComet, IconPaperclip, IconTrash, IconIndentIncrease, IconIndentDecrease } from '@tabler/icons-react';
+import { Route } from '@/routes/word/detail.$id';
+import { Color } from '@tiptap/extension-color';
+import { FontFamily } from '@tiptap/extension-font-family';
+import FontSize from '@tiptap/extension-font-size';
+import Heading from '@tiptap/extension-heading';
+import Highlight from '@tiptap/extension-highlight';
+import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import TableRow from '@tiptap/extension-table-row';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
+import TextAlign from '@tiptap/extension-text-align';
+import TextStyle from '@tiptap/extension-text-style';
+import Underline from '@tiptap/extension-underline';
+import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { Indent } from '@weiruo/tiptap-extension-indent';
+import { Markdown } from 'tiptap-markdown';
+import { Main } from '@/components/layout/main';
+import { LeftSelect } from '@/components/left-select';
+import { LinkPopup } from '@/components/link-popup';
+import { SimpleSelect } from '@/components/simple-select';
+import { HistoryPanel } from './components/HistoryPanel';
+import { Link } from './components/LinkCommand';
+import { Board } from './components/board';
+import { Video } from './components/video';
+import Request from './request';
+import debounce from '@/utils/debounce';
+
 
 export default function Word() {
+  const { id } = Route.useParams()
+  // 获取文档详情
+  const getDocumentDetail = async () => {
+    Request._GetDocumentDetail(id).then((res: any) => {
+      if (res) {
+        const data = res.data
+        setDocTitle(data.name || '未命名文档')
+        setLastSaved(
+          data?.lastEditedAt ? formatLastEditedTime(data.lastEditedAt) : '刚刚'
+        )
+        editor?.commands.setContent(data.content || '')
+      }
+    })
+  }
+  // 保存文档
+  const saveDocument = async () => {
+ 
+    Request._UpdateDocumentDetail(id, {
+      content,
+      // boardData, // 将canvas数据一起保存到后端
+    }).then((res: any) => {
+      if (res) {
+        console.log(res, 'res')
+        setLastSaved('刚刚')
+      }
+    })
+  }
+
+  useEffect(() => {
+    getDocumentDetail()
+  }, [])
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [content, setContent] = useState('')
+  const [indentType, setIndentType] = useState<'increase' | 'decrease'>(
+    'increase'
+  )
   const [docTitle, setDocTitle] = useState('未命名文档')
   const [isStarred, setIsStarred] = useState(false)
   const [lastSaved, setLastSaved] = useState('刚刚')
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false)
+  const [showLinkPopup, setShowLinkPopup] = useState(false)
+  const [linkPopupProps, setLinkPopupProps] = useState<any>({})
+  useEffect(() => {
+    if (!content) return
+    const debouncedSaveDocument = debounce(saveDocument, 800)
+    debouncedSaveDocument()
+  }, [content])
+  const formatLastEditedTime = (timestamp: string) => {
+    const now = new Date()
+    const editedTime = new Date(timestamp)
+    const diffInMs = now.getTime() - editedTime.getTime()
+    const diffInSec = Math.floor(diffInMs / 1000)
+    const diffInMin = Math.floor(diffInSec / 60)
+    const diffInHrs = Math.floor(diffInMin / 60)
+    const diffInDays = Math.floor(diffInHrs / 24)
+
+    if (diffInDays > 0) {
+      return editedTime.toLocaleString()
+    } else if (diffInHrs > 0) {
+      return `${diffInHrs}小时前`
+    } else if (diffInMin > 0) {
+      return `${diffInMin}分钟前`
+    } else {
+      return `${diffInSec}秒前`
+    }
+  }
 
   const editor: any = useEditor({
     extensions: [
@@ -69,6 +110,14 @@ export default function Word() {
       Image,
       TaskList,
       TaskItem,
+      FontFamily.configure({
+        types: ['textStyle'],
+      }),
+      Indent.configure({
+        types: ['listItem', 'paragraph'],
+        minLevel: 0,
+        maxLevel: 1,
+      }),
       Table.configure({
         resizable: true,
       }),
@@ -76,6 +125,8 @@ export default function Word() {
       TableHeader,
       TableCell,
       Video,
+      Board,
+      Link,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -100,8 +151,6 @@ export default function Word() {
     content: '',
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML())
-      // Simulate auto-save
-      setLastSaved('刚刚')
     },
     editorProps: {
       attributes: {
@@ -189,6 +238,19 @@ export default function Word() {
   const [alignType, setAlignType] = useState<
     'left' | 'center' | 'right' | 'justify'
   >('left')
+  const [fontSize, setFontSize] = useState<string>('14px')
+  const [fontFamily, setfontFamily] = useState<string>('Inter')
+
+  const updateFontFamily = () => {
+    if (!editor) return
+    const currentFontFamily = editor.getAttributes('textStyle').fontFamily
+    setfontFamily(currentFontFamily || 'Inter')
+  }
+  const updateFontSize = () => {
+    if (!editor) return
+    const currentFontSize = editor.getAttributes('textStyle').fontSize
+    setFontSize(currentFontSize || '14px')
+  }
 
   useEffect(() => {
     if (!editor) return
@@ -271,17 +333,23 @@ export default function Word() {
     updateHeadingLevel()
     updateListType()
     updateAlignType()
+    updateFontFamily()
+    updateFontSize()
 
     editor.on('transaction', () => {
       updateHeadingLevel()
       updateListType()
       updateAlignType()
+      updateFontFamily()
+      updateFontSize()
     })
 
     return () => {
       editor.off('transaction', updateHeadingLevel)
       editor.off('transaction', updateListType)
       editor.off('transaction', updateAlignType)
+      editor.off('transaction', updateFontFamily)
+      editor.off('transaction', updateFontSize)
     }
   }, [editor])
 
@@ -353,15 +421,7 @@ export default function Word() {
     }
   }, [editor, headings, activeHeadingId])
 
-  function debounce(func: Function, wait: number) {
-    let timeout: NodeJS.Timeout
-    return function (this: any, ...args: any[]) {
-      clearTimeout(timeout)
-      timeout = setTimeout(() => {
-        func.apply(this, args)
-      }, wait)
-    }
-  }
+
 
   useEffect(() => {
     if (!editor) return
@@ -462,7 +522,10 @@ export default function Word() {
             </div>
 
             <div className='flex items-center space-x-1'>
-              <button className='flex items-center space-x-1 rounded p-1 text-sm text-gray-600 hover:bg-gray-100'>
+              <button
+                onClick={() => setShowHistoryPanel(true)}
+                className='flex items-center space-x-1 rounded p-1 text-sm text-gray-600 hover:bg-gray-100'
+              >
                 <IconHistory className='h-4 w-4' />
                 <span>历史</span>
               </button>
@@ -488,6 +551,18 @@ export default function Word() {
             </div>
           </div>
         </div>
+
+        {showHistoryPanel && (
+          <HistoryPanel
+            docId={id}
+            currentContent={editor?.getHTML()}
+            onRestore={(content) => {
+              editor?.commands.setContent(content)
+              setShowHistoryPanel(false)
+            }}
+            onClose={() => setShowHistoryPanel(false)}
+          />
+        )}
 
         <div className='flex h-[calc(100vh-48px)]'>
           {/* 左侧导航栏 */}
@@ -550,6 +625,58 @@ export default function Word() {
                       >
                         <IconBold className='h-4 w-4' />
                       </button>
+                      <button
+                        title='超链接 (Ctrl+K)'
+                        onClick={() => {
+                          const selectedText =
+                            editor.state.selection.content().content.firstChild
+                              ?.textContent || ''
+                          if (!selectedText) return
+
+                          setShowLinkPopup(true)
+                          setLinkPopupProps({
+                            selectedText,
+                            onInsert: (text: any, url: any) => {
+                              editor?.commands.setLink({
+                                href: url,
+                                text: selectedText,
+                              })
+                            },
+                            onClose: () => setShowLinkPopup(false),
+                          })
+                        }}
+                        className={`rounded p-1 hover:bg-gray-300 ${editor.isActive('link') ? 'bg-gray-300' : ''}`}
+                      >
+                        <IconPaperclip className='h-4 w-4' />
+                      </button>
+                      <SimpleSelect
+                        value={fontSize}
+                        onValueChange={(value) => {
+                          editor.chain().focus().setFontSize(value).run()
+                        }}
+                        items={[
+                          { label: '12px', value: '12px' },
+                          { label: '16px', value: '16px' },
+                          { label: '20px', value: '20px' },
+                          { label: '24px', value: '24px' },
+                        ]}
+                        className='font-size-select rounded bg-transparent p-1 hover:bg-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-none'
+                      />
+                      <SimpleSelect
+                        value={fontFamily}
+                        onValueChange={(value) => {
+                          editor.chain().focus().setFontFamily(value).run()
+                        }}
+                        items={[
+                          { label: '宋体', value: 'SimSun' },
+                          { label: '黑体', value: 'SimHei' },
+                          { label: '微软雅黑', value: 'Microsoft YaHei' },
+                          { label: '楷体', value: 'KaiTi' },
+                          { label: 'Inter', value: 'Inter' },
+                          { label: 'Manrope', value: 'Manrope' },
+                        ]}
+                        className='font-family-select rounded bg-transparent p-1 hover:bg-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-none'
+                      />
                       <button
                         title='斜体 (Ctrl+I)'
                         onClick={() =>
@@ -680,6 +807,30 @@ export default function Word() {
                         ]}
                         className='align-select rounded bg-transparent p-1 hover:bg-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-none'
                       />
+                      <SimpleSelect
+                        value={indentType}
+                        onValueChange={(value) => {
+                          if (value === 'increase') {
+                            console.log('increase')
+                            editor.chain().focus().indent().run()
+                          } else {
+                            editor.chain().focus().outdent().run()
+                          }
+                        }}
+                        items={[
+                          {
+                            label: '增加缩进',
+                            value: 'increase',
+                            icon: <IconIndentIncrease className='h-4 w-4' />,
+                          },
+                          {
+                            label: '减少缩进',
+                            value: 'decrease',
+                            icon: <IconIndentDecrease className='h-4 w-4' />,
+                          },
+                        ]}
+                        className='indent-select rounded bg-transparent p-1 hover:bg-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-none'
+                      />
                       <div className='flex items-center space-x-1 border-l border-gray-200 pl-2'>
                         <IconTypography className='h-4 w-4 text-gray-500' />
                         <input
@@ -718,6 +869,45 @@ export default function Word() {
                         />
                       </div>
                     </div>
+                  </BubbleMenu>
+
+                  <BubbleMenu
+                    editor={editor}
+                    tippyOptions={{
+                      duration: 100,
+                      appendTo: 'parent',
+                      interactive: true,
+                    }}
+                    shouldShow={({ editor }) => {
+                      return editor.isActive('link')
+                    }}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+
+                        const { state } = editor
+                        const { $from } = state.selection
+
+                        // 获取当前链接节点
+                        const linkNode = $from.nodeAfter
+
+                        if (linkNode) {
+                          const text = linkNode.attrs.text || ''
+                          editor
+                            .chain()
+                            .deleteRange(
+                              $from.pos,
+                              $from.pos + linkNode.nodeSize
+                            )
+                            .insertContent(text)
+                            .run()
+                        }
+                      }}
+                    >
+                      <IconPaperclip className='h-4 w-4 text-[red]' />
+                    </button>
                   </BubbleMenu>
                   <FloatingMenu
                     editor={editor}
@@ -766,6 +956,17 @@ export default function Word() {
           </div>
         </div>
       </Main>
+
+      {showLinkPopup && (
+        <div
+          className='fixed inset-0 z-10000 flex items-center justify-center bg-black/50'
+          onClick={() => setShowLinkPopup(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <LinkPopup {...linkPopupProps} compact />
+          </div>
+        </div>
+      )}
     </>
   )
 }

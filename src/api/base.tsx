@@ -1,8 +1,7 @@
-import axios from 'axios';
-import debounce from '@/utils/debounce';
-import { ErrorMessages } from '@/utils/errCode';
-import { showErrorData } from '@/utils/show-submitted-data';
-
+import axios from 'axios'
+import debounce from '@/utils/debounce'
+import { ErrorMessages } from '@/utils/errCode'
+import { showErrorData } from '@/utils/show-submitted-data'
 
 // import { useAuthStore } from '@/stores/authStore'
 
@@ -41,6 +40,7 @@ axiosServe.interceptors.response.use(
   },
   (err: any) => {
     const errorCode = err.status
+    console.log(err)
     let errorMessage = ErrorMessages[errorCode].message || 'unknown error'
     debounce(() => showErrorData(errorMessage), 300)()
 
@@ -59,17 +59,31 @@ const setCancelToken = (config: any) => {
   })
 }
 const setHeader = (config: any) => {
+  // 排除登录注册接口
+  if (
+    config.url &&
+    (config.url.includes('/auth/register') ||
+      config.url.includes('/auth/login'))
+  ) {
+    return config
+  }
+
   const cookies = document.cookie.split('; ').reduce((prev: any, current) => {
     const [name, value] = current.split('=')
     prev[name] = value
     return prev
   }, {})
   const token = decodeURIComponent(cookies['shadcn'])
-  if (token) {
+  if (token && token !== 'undefined') {
     if (!config.headers) {
       config.headers = {}
     }
     config.headers['Authorization'] = `Bearer ${JSON.parse(token)}`
+  } else {
+    showErrorData('登录已过期，请重新登录')
+    setTimeout(() => {
+      window.location.href = '/sign-in'
+    }, 1000)
   }
   return config
 }
