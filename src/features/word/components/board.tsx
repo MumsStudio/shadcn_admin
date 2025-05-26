@@ -1,3 +1,11 @@
+import ReactDOM from 'react-dom/client'
+import {
+  IconPointer,
+  IconRectangleFilled,
+  IconCircleFilled,
+  IconLetterT,
+  IconPencil,
+} from '@tabler/icons-react'
 import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core'
 import * as fabric from 'fabric'
 
@@ -194,11 +202,11 @@ export const Board = Node.create<BoardOptions>({
       toolPanel.style.overflowY = 'auto'
 
       const tools = [
-        { name: '选择', tool: 'select' },
-        { name: '矩形', tool: 'rect' },
-        { name: '圆形', tool: 'circle' },
-        { name: '文本', tool: 'text' },
-        { name: '画笔', tool: 'free-draw' },
+        { name: <IconPointer size={20} />, tool: 'select' },
+        { name: <IconRectangleFilled size={20} />, tool: 'rect' },
+        { name: <IconCircleFilled size={20} />, tool: 'circle' },
+        { name: <IconLetterT size={20} />, tool: 'text' },
+        { name: <IconPencil size={20} />, tool: 'free-draw' },
       ]
 
       tools.forEach(({ name, tool }) => {
@@ -206,7 +214,13 @@ export const Board = Node.create<BoardOptions>({
         button.className = 'tool-btn'
         button.setAttribute('data-tool', tool)
         button.style.marginBottom = '10px'
-        button.textContent = name
+
+        // 创建容器并渲染React组件
+        const container = document.createElement('div')
+        const root = ReactDOM.createRoot(container)
+        root.render(name)
+        button.appendChild(container)
+
         toolPanel.appendChild(button)
       })
 
@@ -364,7 +378,7 @@ export const Board = Node.create<BoardOptions>({
           // Update preview with new data if changed
 
           previewCanvas.loadFromJSON(updatedNode.attrs.data, () => {
-            console.log('Preview canvas loaded22222,',updatedNode.attrs.data,)
+            console.log('Preview canvas loaded22222,', updatedNode.attrs.data)
             previewCanvas.renderAll()
           })
 

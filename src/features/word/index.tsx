@@ -20,16 +20,17 @@ import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/reac
 import StarterKit from '@tiptap/starter-kit';
 import { Indent } from '@weiruo/tiptap-extension-indent';
 import { Markdown } from 'tiptap-markdown';
+import debounce from '@/utils/debounce';
 import { Main } from '@/components/layout/main';
 import { LeftSelect } from '@/components/left-select';
 import { LinkPopup } from '@/components/link-popup';
 import { SimpleSelect } from '@/components/simple-select';
+import { ListBox } from './components/CardCommand';
 import { HistoryPanel } from './components/HistoryPanel';
 import { Link } from './components/LinkCommand';
 import { Board } from './components/board';
 import { Video } from './components/video';
 import Request from './request';
-import debounce from '@/utils/debounce';
 
 
 export default function Word() {
@@ -110,6 +111,7 @@ export default function Word() {
       Image,
       TaskList,
       TaskItem,
+      ListBox,
       FontFamily.configure({
         types: ['textStyle'],
       }),

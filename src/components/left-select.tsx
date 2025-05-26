@@ -34,9 +34,11 @@ import {
   IconH5,
   IconH6,
   IconClipboard,
+  IconCards,
 } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import debounce from '@/utils/debounce'
+import CardDrawer from './CardDrawer'
 
 type Item = {
   label: string
@@ -428,6 +430,35 @@ export function LeftSelect({
         }
 
         document.body.appendChild(linkMenu)
+      },
+    },
+    {
+      icon: <IconCards className='mx-2 h-4 w-4' />,
+      title: '插入列表框',
+      action: () => {
+        const cardMenu = document.createElement('div')
+        cardMenu.className = 'absolute z-50 bg-white p-2 rounded shadow-lg'
+
+        import('@/features/word/components/CardCommand').then(({ ListBox }) => {
+          const root = ReactDOM.createRoot(cardMenu)
+          root.render(
+            <CardDrawer
+              onInsert={(title) =>
+                editor?.commands.setListBox({ title: title })
+              }
+              onClose={() => document.body.removeChild(cardMenu)}
+              compact={true}
+            />
+          )
+        })
+
+        const rect = dropdownRef.current?.getBoundingClientRect()
+        if (rect) {
+          cardMenu.style.top = `${rect.bottom + 5}px`
+          cardMenu.style.left = `${rect.left}px`
+        }
+
+        document.body.appendChild(cardMenu)
       },
     },
   ]
