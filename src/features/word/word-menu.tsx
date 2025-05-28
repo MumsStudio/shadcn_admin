@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import {
+  IconFolderFilled,
+  IconReceipt,
+  IconTournament,
+} from '@tabler/icons-react'
 import { FileText, Folder, MoreHorizontal, Plus, Upload } from 'lucide-react'
 import { showSuccessData } from '@/utils/show-submitted-data'
 import { Button } from '@/components/ui/button'
@@ -223,55 +228,64 @@ export default function WordMenu() {
         </div>
       </Header>
       <Main>
-        <div className='flex h-full'>
+        <div className='flex' style={{ height: 'calc(100vh - 100px)' }}>
           {/* 左侧目录树 */}
-          <div className='w-64 border-r p-4'>
+          <div className='h-[100%] w-90 border-r pr-4'>
             <div className='mb-2'>
               <Button
-                size='sm'
+                size='lg'
                 variant='outline'
-                className='w-full'
+                className='w-full text-[1rem]'
                 onClick={() => {
                   setIsDialogOpen(true)
                   setSelectedDocument('-1')
                 }}
               >
-                <Plus size={16} className='mr-2' />
+                <Plus size={24} className='mr-2' />
                 新建文件夹
               </Button>
             </div>
-            <Tree
-              data={documents}
-              onSelect={handleDocumentClick}
-              renderItem={(item) => (
-                <div
-                  className={`flex items-center gap-2 ${selectedDocument === item.id ? 'bg-blue-50 text-blue-600' : ''}`}
-                >
-                  {item.type === 'folder' ? (
-                    <Folder size={16} />
-                  ) : (
-                    <FileText size={16} />
-                  )}
-                  <span>{item.name}</span>
-                </div>
-              )}
-            />
+            {documents.length === 0 ? (
+              <div className='text-muted-foreground flex h-[80%] flex-col items-center justify-center p-4'>
+                <IconTournament size={60} className='text-gray-300' />
+                <span className='pt-4 text-[1.25rem] text-gray-300'>
+                  No Data
+                </span>
+              </div>
+            ) : (
+              <Tree
+                data={documents}
+                selectedDocument={selectedDocument}
+                onSelect={handleDocumentClick}
+                renderItem={(item) => (
+                  <div className={`flex w-full items-center gap-2`}>
+                    {item.type === 'folder' ? (
+                      <Folder size={20} />
+                    ) : (
+                      <FileText size={20} />
+                    )}
+                    <span>{item.name}</span>
+                  </div>
+                )}
+              />
+            )}
           </div>
 
           {/* 右侧内容区 */}
           <div className='flex flex-1 flex-col'>
             {/* 操作按钮 */}
-            <div className='flex items-center justify-between border-b p-4'>
+            <div className='flex items-center justify-between border-b px-4 pb-4'>
               <div className='flex items-center gap-2'>
                 <Button
-                  size='sm'
+                  size='lg'
+                  className='border-gray-400 text-[1rem]'
                   variant='outline'
                   onClick={() => {
                     setIsDialogOpen(true)
                     // 保留原有选择逻辑
                   }}
                 >
-                  <Plus size={16} className='mr-2' />
+                  <Plus size={30} className='mr-1 border-gray-400' />
                   新建
                 </Button>
 
@@ -293,11 +307,19 @@ export default function WordMenu() {
                   // 为了解决类型不匹配问题，将 null 转换为 undefined
                   parentId={selectedDocument ?? undefined}
                 />
-                <Button size='sm' variant='outline'>
-                  <Upload size={16} className='mr-2' />
+                <Button
+                  size='lg'
+                  variant='outline'
+                  className='border-gray-400 text-[1rem]'
+                >
+                  <Upload size={24} className='mr-1' />
                   上传
                 </Button>
-                <Button size='sm' variant='outline'>
+                <Button
+                  size='lg'
+                  variant='outline'
+                  className='border-gray-400 text-[1rem]'
+                >
                   模板库
                 </Button>
               </div>
@@ -341,93 +363,105 @@ export default function WordMenu() {
             </div>
 
             {/* 文档列表 */}
-            <div className='flex-1 overflow-auto p-4'>
-              {/* 表头 */}
-              <div className='mb-4 flex items-center border-b pb-2 text-sm font-medium'>
-                <div
-                  className='flex-1 cursor-pointer hover:text-blue-500'
-                  onClick={() => handleSort('name')}
-                >
-                  文档名称{' '}
-                  {sortConfig.key === 'name' &&
-                    (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </div>
-                <div
-                  className='w-24 cursor-pointer hover:text-blue-500'
-                  onClick={() => handleSort('type')}
-                >
-                  类型{' '}
-                  {sortConfig.key === 'type' &&
-                    (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </div>
-                <div
-                  className='flex-1 cursor-pointer hover:text-blue-500'
-                  onClick={() => handleSort('owner')}
-                >
-                  所有者{' '}
-                  {sortConfig.key === 'owner' &&
-                    (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </div>
-                <div
-                  className='flex-1 cursor-pointer hover:text-blue-500'
-                  onClick={() => handleSort('updatedAt')}
-                >
-                  更新时间{' '}
-                  {sortConfig.key === 'updatedAt' &&
-                    (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </div>
+            {currentDocuments.length === 0 ? (
+              <div className='flex h-full flex-col items-center justify-center text-gray-500'>
+                <IconReceipt size={140} className='text-gray-300' />
+                <span className='text-[1.5rem]'>
+                  There is nothing here, click the Add button to add
+                </span>
               </div>
+            ) : (
+              <div className='flex-1 overflow-auto p-4'>
+                {/* 表头 */}
+                <div className='flex items-center justify-center border-b px-2 pb-3 text-sm font-medium'>
+                  <div
+                    className='w-[30rem] cursor-pointer hover:text-blue-500'
+                    onClick={() => handleSort('name')}
+                  >
+                    文档名称{' '}
+                    {sortConfig.key === 'name' &&
+                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                  <div
+                    className='w-[12rem] cursor-pointer hover:text-blue-500'
+                    onClick={() => handleSort('type')}
+                  >
+                    类型{' '}
+                    {sortConfig.key === 'type' &&
+                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                  <div
+                    className='w-[24rem] cursor-pointer hover:text-blue-500'
+                    onClick={() => handleSort('owner')}
+                  >
+                    所有者{' '}
+                    {sortConfig.key === 'owner' &&
+                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                  <div
+                    className='flex-1 cursor-pointer hover:text-blue-500'
+                    onClick={() => handleSort('updatedAt')}
+                  >
+                    更新时间{' '}
+                    {sortConfig.key === 'updatedAt' &&
+                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                </div>
 
-              {currentDocuments.map((doc) => (
-                <Card
-                  key={doc.id}
-                  className={`mb-4 cursor-pointer transition-all hover:shadow-md ${selectedDocument === doc.id ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'}`}
-                  onClick={() => handleDocumentClick(doc.id)}
-                >
-                  <CardHeader className='p-4'>
-                    <CardTitle className='flex items-center text-sm font-medium'>
-                      <div className='flex flex-1 items-center gap-2'>
-                        {doc.type === 'folder' ? (
-                          <Folder size={16} className='text-gray-600' />
-                        ) : (
-                          <FileText size={16} className='text-gray-600' />
-                        )}
-                        <span className='text-gray-800'>{doc.name}</span>
-                      </div>
-                      <div className='w-24 text-gray-800'>
-                        {doc.type === 'folder' ? '文件夹' : '文件'}
-                      </div>
-                      <div className='flex-1 text-gray-800'>
-                        {doc.ownerEmail}
-                      </div>
-                      <div className='flex-1 text-gray-800'>
-                        {new Date(doc.updatedAt).toLocaleString()}
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant='ghost' size='sm'>
-                            <MoreHorizontal size={16} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end'>
-                          <DropdownMenuItem onClick={() => handleEdit(doc)}>
-                            编辑
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(doc.id)
-                            }}
-                          >
-                            删除
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
+                {currentDocuments.map((doc) => (
+                  <Card
+                    key={doc.id}
+                    className={`cursor-pointer rounded-none border-t-0 border-r-0 border-b border-l-0 p-0 transition-all ${selectedDocument === doc.id ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'}`}
+                    onClick={() => handleDocumentClick(doc.id)}
+                  >
+                    <CardHeader className='m-0 p-2 pb-0'>
+                      <CardTitle className='flex items-center text-sm font-medium'>
+                        <div className='flex w-[30rem] items-center gap-2'>
+                          {doc.type === 'folder' ? (
+                            <IconFolderFilled
+                              size={24}
+                              className='text-[#FFE792]'
+                            />
+                          ) : (
+                            <FileText size={24} className='text-blue-600' />
+                          )}
+                          <span className='text-gray-800'>{doc.name}</span>
+                        </div>
+                        <div className='w-[12rem] text-gray-800'>
+                          {doc.type === 'folder' ? '文件夹' : '文件'}
+                        </div>
+                        <div className='w-[24rem] text-gray-800'>
+                          {doc.ownerEmail}
+                        </div>
+                        <div className='flex-1 text-gray-800'>
+                          {new Date(doc.updatedAt).toLocaleString()}
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant='ghost' size='sm'>
+                              <MoreHorizontal size={16} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem onClick={() => handleEdit(doc)}>
+                              编辑
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDelete(doc.id)
+                              }}
+                            >
+                              删除
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Main>

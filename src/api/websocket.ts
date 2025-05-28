@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const serveIp = 'http://127.0.0.1:7382';
+const serveIp = import.meta.env.VITE_API_URL;
 export let socket: Socket;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;

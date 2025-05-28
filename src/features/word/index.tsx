@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { IconAlignLeft, IconAlignCenter, IconAlignRight, IconAlignJustified, IconTextSize, IconH1, IconH2, IconH3, IconItalic, IconBackground, IconBold, IconStrikethrough, IconUnderline, IconList, IconListNumbers, IconTypography, IconHorse, IconStar, IconShare, IconMenu, IconUser, IconHistory, IconEye, IconComet, IconPaperclip, IconTrash, IconIndentIncrease, IconIndentDecrease } from '@tabler/icons-react';
+import { IconAlignLeft, IconAlignCenter, IconAlignRight, IconAlignJustified, IconTextSize, IconH1, IconH2, IconH3, IconItalic, IconBackground, IconBold, IconStrikethrough, IconUnderline, IconList, IconListNumbers, IconTypography, IconHorse, IconStar, IconShare, IconMenu, IconUser, IconHistory, IconEye, IconComet, IconPaperclip, IconTrash, IconIndentIncrease, IconIndentDecrease, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from '@tabler/icons-react';
 import { Route } from '@/routes/word/detail.$id';
 import { Color } from '@tiptap/extension-color';
 import { FontFamily } from '@tiptap/extension-font-family';
@@ -493,12 +493,12 @@ export default function Word() {
     <>
       <Main className='overflow-hidden'>
         {/* 顶部导航栏 */}
-        <div className='sticky top-0 z-10 flex h-12 items-center justify-between border-b bg-white px-4'>
+        <div className='sticky top-0 z-10 flex h-16 text-[2rem] items-center justify-between border-b bg-white px-4'>
           <div className='flex items-center space-x-4'>
-            <button className='flex items-center space-x-1 rounded p-1 hover:bg-gray-100'>
+            {/* <button className='flex items-center space-x-1 rounded p-1 hover:bg-gray-100'>
               <IconMenu className='h-5 w-5 text-gray-500' />
               <span className='text-sm font-medium'>文档</span>
-            </button>
+            </button> */}
 
             <div className='flex items-center space-x-2'>
               <input
@@ -519,36 +519,33 @@ export default function Word() {
           </div>
 
           <div className='flex items-center space-x-2'>
-            <div className='flex items-center space-x-1 text-xs text-gray-500'>
+            <div className='flex items-center space-x-1 text-[14px] text-gray-500 pr-[8px]'>
               <span>最后保存: {lastSaved}</span>
             </div>
 
-            <div className='flex items-center space-x-1'>
+            <div className='flex items-center space-x-1 text-[1rem] gap-1'>
               <button
                 onClick={() => setShowHistoryPanel(true)}
-                className='flex items-center space-x-1 rounded p-1 text-sm text-gray-600 hover:bg-gray-100'
+                className='flex items-center space-x-1 rounded text-gray-600 p-2 hover:bg-gray-100'
               >
-                <IconHistory className='h-4 w-4' />
+                <IconHistory size={18} />
                 <span>历史</span>
               </button>
-              <button className='flex items-center space-x-1 rounded p-1 text-sm text-gray-600 hover:bg-gray-100'>
-                <IconEye className='h-4 w-4' />
+              <button className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'>
+                <IconEye size={18} />
                 <span>预览</span>
               </button>
-              <button className='flex items-center space-x-1 rounded p-1 text-sm text-gray-600 hover:bg-gray-100'>
-                <IconComet className='h-4 w-4' />
+              <button className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'>
+                <IconComet size={18} />
                 <span>评论</span>
               </button>
-              <button className='flex items-center space-x-1 rounded p-1 text-sm text-gray-600 hover:bg-gray-100'>
-                <IconShare className='h-4 w-4' />
+              <button className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'>
+                <IconShare size={18} />
                 <span>分享</span>
               </button>
-              <button className='flex items-center space-x-1 rounded p-1 text-sm text-gray-600 hover:bg-gray-100'>
-                <IconUser className='h-4 w-4' />
+              <button className='flex items-center space-x-1 rounded text-gray-600 hover:bg-gray-100'>
+                <IconUser size={18} />
                 <span>协作</span>
-              </button>
-              <button className='flex items-center space-x-1 rounded p-1 text-sm text-gray-600 hover:bg-gray-100'>
-                <IconHorse className='h-4 w-4' />
               </button>
             </div>
           </div>
@@ -573,7 +570,7 @@ export default function Word() {
             style={{
               position: 'fixed',
               left: '10px',
-              top: '80px',
+              top: '110px',
               height: 'calc(100vh - 48px)',
             }}
           >
@@ -598,9 +595,9 @@ export default function Word() {
 
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className='fixed top-[70px] left-4 z-50 h-8 w-8 -translate-y-1/2 rounded-full p-1 text-[26px] text-gray-500'
+            className='fixed top-[90px] left-4 z-50 h-8 w-8 -translate-y-1/2 rounded-full p-1 text-[26px] text-gray-500'
           >
-            {isSidebarCollapsed ? '>>' : '<<'}
+            {isSidebarCollapsed ? <IconLayoutSidebarRightCollapse size={30} className='hover:text-blue-400'/> : <IconLayoutSidebarRightExpand size={30} className='hover:text-blue-400'/>}
           </button>
 
           {/* 中间Markdown编辑器 */}

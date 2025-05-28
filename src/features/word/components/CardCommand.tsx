@@ -271,7 +271,6 @@ export const ListBox = Node.create<ListBoxOptions>({
             allowMultiple: true,
             component: () => (
               <div className='module-content'>
-                <h3 className='text-lg font-bold'>日期设置</h3>
                 <div className='date-picker'>
                   {['开始日期', '截止日期'].map((label, index) => (
                     <label key={index} className='block'>
@@ -295,7 +294,6 @@ export const ListBox = Node.create<ListBoxOptions>({
             allowMultiple: true,
             component: () => (
               <div className='module-content'>
-                <h3 className='text-lg font-bold'>附件管理</h3>
                 <div className='attachment-list'>
                   <div className='attachment-item flex items-center'>
                     <div className='attachment-icon mr-2'>📎</div>
@@ -314,7 +312,6 @@ export const ListBox = Node.create<ListBoxOptions>({
             allowMultiple: true,
             component: () => (
               <div className='module-content'>
-                <h3 className='text-lg font-bold'>自定义字段</h3>
                 <div className='field-list'>
                   <div className='field-item'>
                     <label className='block'>优先级</label>

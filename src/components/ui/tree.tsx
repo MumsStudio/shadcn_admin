@@ -1,5 +1,7 @@
-import React from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import React from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 
 type TreeItem = {
   id: string
@@ -12,9 +14,10 @@ interface TreeProps {
   data: TreeItem[]
   onSelect?: (id: string) => void
   renderItem?: (item: TreeItem) => React.ReactNode
+  selectedDocument?: string | null
 }
 
-export function Tree({ data, onSelect, renderItem }: TreeProps) {
+export function Tree({ data, onSelect, renderItem, selectedDocument }: TreeProps) {
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(
     new Set()
   )
@@ -33,7 +36,18 @@ export function Tree({ data, onSelect, renderItem }: TreeProps) {
     return items.map((item) => (
       <div key={item.id} className='space-y-1'>
         <div
-          className='hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded px-2 py-1'
+          className={cn(
+            'hover:bg-blue-50',
+            'flex',
+            'cursor-pointer',
+            'items-center',
+            'gap-2',
+            'rounded',
+            'px-2',
+            'py-[5px]',
+            'm-0',
+            ` ${selectedDocument === item.id ? 'bg-blue-100 text-blue-600' : ''}`
+          )}
           onClick={() => onSelect?.(item.id)}
         >
           {item.type === 'folder' && (
@@ -45,9 +59,9 @@ export function Tree({ data, onSelect, renderItem }: TreeProps) {
               }}
             >
               {expandedItems.has(item.id) ? (
-                <ChevronDown size={16} />
+                <ChevronDown size={20} />
               ) : (
-                <ChevronRight size={16} />
+                <ChevronRight size={20} />
               )}
             </button>
           )}

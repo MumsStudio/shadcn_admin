@@ -1,14 +1,15 @@
-import axios from 'axios'
-import debounce from '@/utils/debounce'
-import { ErrorMessages } from '@/utils/errCode'
-import { showErrorData } from '@/utils/show-submitted-data'
+import axios from 'axios';
+import debounce from '@/utils/debounce';
+import { ErrorMessages } from '@/utils/errCode';
+import { showErrorData } from '@/utils/show-submitted-data';
+
 
 // import { useAuthStore } from '@/stores/authStore'
 
 // const authStore = useAuthStore()
 const axiosServe: any = axios.create({
   timeout: 60000,
-  baseURL: 'http://127.0.0.1:7382',
+  baseURL: import.meta.env.VITE_API_URL,
 })
 
 // 请求拦截
@@ -41,7 +42,8 @@ axiosServe.interceptors.response.use(
   (err: any) => {
     const errorCode = err.status
     console.log(err)
-    let errorMessage = ErrorMessages[errorCode].message || 'unknown error'
+    const errMsg = ErrorMessages[errorCode] || []
+    let errorMessage = errMsg.message || 'unknown error'
     debounce(() => showErrorData(errorMessage), 300)()
 
     return Promise.reject(err)
