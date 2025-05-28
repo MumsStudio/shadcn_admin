@@ -386,9 +386,16 @@ li.heading-3 {
   padding: 16px !important;
   width: 100% !important;
 }
-.add-label-button{
-  margin-top: 5px !important;
+
+.add-label-button {
+  /* margin-top: 5px !important; */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 2.875rem !important;
+  width: 2.875rem !important;
 }
+
 .actions-sidebar {
   width: 180px !important;
   padding: 16px !important;

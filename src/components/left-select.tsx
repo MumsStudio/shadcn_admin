@@ -113,7 +113,12 @@ export function LeftSelect({
       }, 300)
     }
   }
-
+  const handleInsertCard = (title: string) => {
+    if (!editor) return
+    console.log(title)
+    // 执行第一个命令
+    editor.commands.setListBox({ title })
+  }
   useEffect(() => {
     return () => {
       if (closeTimeout) clearTimeout(closeTimeout)
@@ -443,9 +448,7 @@ export function LeftSelect({
           const root = ReactDOM.createRoot(cardMenu)
           root.render(
             <CardDrawer
-              onInsert={(title) =>
-                editor?.commands.setListBox({ title: title })
-              }
+              onInsert={(title) => handleInsertCard(title)}
               onClose={() => document.body.removeChild(cardMenu)}
               compact={true}
             />

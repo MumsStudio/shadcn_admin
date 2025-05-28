@@ -611,7 +611,7 @@ export default function Word() {
                       duration: 100,
                       appendTo: 'parent',
                       interactive: true,
-                      onHidden: () => false,
+                      onHidden: () => true,
                     }}
                   >
                     <div className='markdown-menu flex min-w-[400px] flex-wrap gap-1 rounded-md border p-1 shadow-lg ring-1 ring-black/5'>
