@@ -299,7 +299,7 @@ export default function Chats() {
                               src={profile}
                               alt={username || email}
                             />
-                            <AvatarFallback>{username}</AvatarFallback>
+                            <AvatarFallback>{username || email}</AvatarFallback>
                           </Avatar>
                           <div>
                             <span className='col-start-2 row-span-2 font-medium'>

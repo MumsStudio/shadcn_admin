@@ -42,7 +42,7 @@ export default {
     })
   },
   // 更新文档详情
-   _UpdateDocumentDetail: (id: any,data: any) => {
+  _UpdateDocumentDetail: (id: any, data: any) => {
     return axios({
       method: 'patch',
       url: `/cloud-document/${id}`,
@@ -50,24 +50,39 @@ export default {
     })
   },
   // 创建文档详情
-   _CreateDocumentDetail: (id: any) => {
+  _CreateDocumentDetail: (id: any) => {
     return axios({
       method: 'post',
       url: `/cloud-document/${id}`,
     })
   },
   // 获取文档历史记录
-   _GetDocumentHistory: (id: any) => {
+  _GetDocumentHistory: (id: any) => {
     return axios({
       method: 'get',
       url: `/cloud-document/${id}/history`,
     })
   },
   // 设置文档权限
-   _SetDocumentPermission: (id: any) => {
+  _SetDocumentPermission: (id: any) => {
     return axios({
       method: 'post',
       url: `/document/${id}/permissions`,
     })
-  }
+  },
+  /**获取所有用户 */
+  _GetUsers: (data: any = {}) => {
+    return axios({
+      method: 'get',
+      url: '/users',
+      param: data,
+    })
+  },
+  _GetUserInfo: (user: any) => {
+    return axios({
+      method: 'post',
+      url: `/users`,
+      data: { email: user },
+    })
+  },
 }

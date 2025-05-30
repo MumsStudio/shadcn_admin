@@ -1,14 +1,13 @@
 // ListBox.tsx
-import React, { useEffect, useState } from 'react';
-import ReactDOM from 'react-dom/client';
-import { Node } from '@tiptap/core';
-import { createPortal } from 'react-dom';
-import CardEditor from './CardEditor';
-import ListBoxContent from './ListBoxContent';
-import ListBoxFooter from './ListBoxFooter';
-import ListBoxHeader from './ListBoxHeader';
-import { Card } from './types';
-
+import React, { useEffect, useState } from 'react'
+import ReactDOM from 'react-dom/client'
+import { Node } from '@tiptap/core'
+import { createPortal } from 'react-dom'
+import CardEditor from './CardEditor'
+import ListBoxContent from './ListBoxContent'
+import ListBoxFooter from './ListBoxFooter'
+import ListBoxHeader from './ListBoxHeader'
+import { Card } from './types'
 
 export interface ListBoxOptions {
   HTMLAttributes: Record<string, any>
@@ -115,6 +114,18 @@ export const ListBox = Node.create<ListBoxOptions>({
           setModalOpen(true)
           editor.commands.blur()
         }
+        const [currentClickCard, setCurrentClickCard] = useState<Card | null>(
+          null
+        )
+        const handleCardClick = (cardId: string) => {
+          // console.log('handleCardClick', cardId)
+          const card = cards.find((c) => c.id === cardId)
+          if (card) {
+            // console.log('card', card)
+            setCurrentClickCard(card)
+            setModalOpen(true)
+          }
+        }
         useEffect(() => {
           if (isModalOpen && ModalRef.current) {
             ModalRef.current.focus()
@@ -135,6 +146,7 @@ export const ListBox = Node.create<ListBoxOptions>({
         const handleModalClose = (e: React.MouseEvent) => {
           e.stopPropagation()
           console.log('handleModalClose')
+          setCurrentClickCard(null)
           setModalOpen(false)
         }
 
@@ -151,12 +163,19 @@ export const ListBox = Node.create<ListBoxOptions>({
               getPos={getPos}
               editor={editor}
             />
-            <ListBoxContent cards={cards} />
+            <ListBoxContent
+              cards={cards}
+              handleCardClick={(cardId) => {
+                handleCardClick(cardId)
+              }}
+            />
             <ListBoxFooter handleAddCardClick={handleAddCardClick} />
             <div>
               {isModalOpen &&
                 createPortal(
                   <CardEditor
+                    isModalOpen={isModalOpen}
+                    currentClickCard={currentClickCard}
                     handleModalSubmit={handleModalSubmit}
                     handleModalClose={handleModalClose}
                     activeModules={activeModules}

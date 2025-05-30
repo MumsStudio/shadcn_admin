@@ -29,7 +29,7 @@ const LabelsModule: React.FC<LabelsModuleProps> = ({
     if (newLabel.trim()) {
       onChange(
         [...labels, { text: newLabel, color: selectedColor }],
-        `addLabel${newLabel}`
+        `add Label:${newLabel}`
       )
       setNewLabel('')
       setShowDialog(false)
@@ -40,7 +40,7 @@ const LabelsModule: React.FC<LabelsModuleProps> = ({
     if (newLabel.trim()) {
       const updatedLabels = [...labels]
       updatedLabels[index] = { text: newLabel, color: selectedColor }
-      onChange(updatedLabels, `updateLabel${newLabel}`)
+      onChange(updatedLabels, `update Label:${newLabel}`)
       setNewLabel('')
       setShowDialog(false)
       setEditingLabelIndex(null)
@@ -79,7 +79,7 @@ const LabelsModule: React.FC<LabelsModuleProps> = ({
       </div>
 
       {showDialog && (
-        <div className='bg-opacity-50 fixed inset-0 flex items-center justify-center'>
+        <div className='bg-opacity-50 fixed inset-0 flex items-center justify-center z-10'>
           <div className='h-[400px] w-[300px] rounded-lg border border-gray-300 bg-white p-4 shadow-lg'>
             <h3 className='mb-2 text-lg font-medium'>
               {editingLabelIndex !== null ? '编辑标签' : '创建新标签'}
@@ -121,7 +121,7 @@ const LabelsModule: React.FC<LabelsModuleProps> = ({
                   onClick={() => {
                     const updatedLabels = [...labels]
                     updatedLabels.splice(editingLabelIndex, 1)
-                    onChange(updatedLabels, `deleteLabel${labels[editingLabelIndex].text}`)
+                    onChange(updatedLabels, `delete Label:${labels[editingLabelIndex].text}`)
                     setShowDialog(false)
                     setEditingLabelIndex(null)
                   }}

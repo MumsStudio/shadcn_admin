@@ -12,5 +12,5 @@ export interface Card {
   content: string
   modules?: Record<string, any>
   cardContent: Record<string, any> // 保存当前卡片弹窗中每个模块的数据
-  cardActions: Array<{ action: string; timestamp: string }> // 保存当前卡片的操作记
+  cardActions: Array<{ action: string; timestamp: string; isEditing?: boolean }> // 保存当前卡片的操作记
 }

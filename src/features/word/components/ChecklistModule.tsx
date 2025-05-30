@@ -1,19 +1,37 @@
 // ChecklistModule.tsx
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { IconTrash } from '@tabler/icons-react'
 
 interface ChecklistModuleProps {
-  onChange: (data: any) => void
+  onChange: (data: any, action: string) => void
+  currentCard: {
+    modules?: {
+      checklist?: any[]
+    }
+  }
 }
-const ChecklistModule: React.FC<ChecklistModuleProps> = ({ onChange }) => {
+const ChecklistModule: React.FC<ChecklistModuleProps> = ({
+  onChange,
+  currentCard,
+}) => {
   const [showAdd, setShowAdd] = useState(false)
   const [newItem, setNewItem] = useState('')
-  const [items, setItems] = useState<string[]>([])
-  const [checkedItems, setCheckedItems] = useState<boolean[]>([])
-
+  const [items, setItems] = useState<{ name: string; checked: boolean }[]>([])
+  useEffect(() => {
+    const checklist = currentCard?.modules?.checklist || []
+    setItems(
+      Array.isArray(checklist)
+        ? checklist.map((item) =>
+            typeof item === 'string' ? { name: item, checked: false } : item
+          )
+        : []
+    )
+  }, [currentCard?.modules])
   const progress =
     items.length > 0
-      ? Math.round((checkedItems.filter(Boolean).length / items.length) * 100)
+      ? Math.round(
+          (items.filter((item) => item.checked).length / items.length) * 100
+        )
       : 0
 
   return (
@@ -22,7 +40,7 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({ onChange }) => {
         <div className='flex justify-between text-sm'>
           <span>{progress}%</span>
           <span>
-            {checkedItems.filter(Boolean).length}/{items.length}
+            {items.filter((item) => item.checked).length}/{items.length}
           </span>
         </div>
         <div className='h-2 w-full rounded-full bg-gray-200'>
@@ -37,22 +55,37 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({ onChange }) => {
           <input
             type='checkbox'
             className='mr-2'
-            checked={checkedItems[index]}
+            checked={items[index]?.checked || false}
             onChange={(e) => {
-              const newCheckedItems = [...checkedItems]
-              newCheckedItems[index] = e.target.checked
-              setCheckedItems(newCheckedItems)
+              const newItems = [...items]
+              newItems[index] = {
+                ...newItems[index],
+                checked: e.target.checked,
+              }
+              if (e.target.checked) {
+                onChange(newItems, `Complete the task ${newItems[index].name}`)
+              } else {
+                onChange(
+                  newItems,
+                  `Task ${newItems[index].name} marks incomplete`
+                )
+              }
+
+              setItems(newItems)
             }}
           />
           <div
-            className={`group flex w-[23.125rem] cursor-pointer justify-between p-1 hover:rounded hover:bg-gray-300 ${checkedItems[index] ? 'text-gray-400 line-through' : ''}`}
+            className={`group flex w-[23.125rem] cursor-pointer justify-between p-1 hover:rounded hover:bg-gray-300 ${items[index]?.checked ? 'text-gray-400 line-through' : ''}`}
           >
-            <div>{item}</div>
+            <div>{item.name}</div>
             <button
               className='invisible text-red-500 group-hover:visible hover:text-red-700'
               onClick={() => {
+                onChange(
+                  items.filter((_, i) => i !== index),
+                  `Delete task ${item.name}`
+                )
                 setItems(items.filter((_, i) => i !== index))
-                setCheckedItems(checkedItems.filter((_, i) => i !== index))
               }}
             >
               <IconTrash className='h-4 w-4' />
@@ -81,8 +114,11 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({ onChange }) => {
             <button
               className='rounded bg-blue-500 px-3 py-1 text-white hover:bg-blue-600'
               onClick={() => {
-                setItems([...items, newItem])
-                setCheckedItems([...checkedItems, false])
+                // setItems([...items, newItem])
+                onChange(
+                  [...items, { name: newItem, checked: false }],
+                  `Add task ${newItem}`
+                )
                 setNewItem('')
                 setShowAdd(false)
               }}

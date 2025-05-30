@@ -1,17 +1,32 @@
 // AttachmentsModule.tsx
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react';
+
 
 interface AttachmentsModuleProps {
-  onChange: (data: any) => void
+  currentCard: {
+    modules?: {
+      attachments?: any[]
+    }
+  }
+  onChange: (data: any, action: string) => void
 }
-const AttachmentsModule: React.FC<AttachmentsModuleProps> = ({ onChange }) => {
+const AttachmentsModule: React.FC<AttachmentsModuleProps> = ({
+  onChange,
+  currentCard,
+}) => {
   const [showModal, setShowModal] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-
+  useEffect(() => {
+    setSelectedFiles(currentCard?.modules?.attachments || [])
+  }, [currentCard?.modules])
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setSelectedFiles((prev) => [...prev, ...Array.from(e.target.files!)])
+      console.log(e.target.files, 'files')
+      onChange(
+        [...selectedFiles, ...Array.from(e.target.files!)],
+        `Add attachments ${e.target.files?.[0].name || ''}`
+      )
     }
   }
 
@@ -20,7 +35,11 @@ const AttachmentsModule: React.FC<AttachmentsModuleProps> = ({ onChange }) => {
   }
 
   const removeFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+    // setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+    onChange(
+      selectedFiles.filter((_, i) => i !== index),
+      `Remove attachments ${selectedFiles[index].name || ''} `
+    )
   }
 
   return (
@@ -72,7 +91,7 @@ const AttachmentsModule: React.FC<AttachmentsModuleProps> = ({ onChange }) => {
       </button>
 
       {showModal && (
-        <div className='bg-opacity-50 fixed inset-0 flex items-center justify-center bg-black'>
+        <div className='bg-opacity-50 fixed inset-0 flex items-center justify-center bg-black z-100'>
           <div className='w-96 rounded-lg bg-white p-4'>
             <h3 className='mb-4 text-lg font-medium'>上传附件</h3>
             <input

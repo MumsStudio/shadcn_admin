@@ -1,20 +1,32 @@
 // DatesModule.tsx
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface DatesModuleProps {
-  onChange: (data: any) => void
+  onChange: (data: any, action: string) => void
+  currentCard: {
+    modules?: {
+      dates?: any[]
+    }
+  }
 }
-const DatesModule: React.FC<DatesModuleProps> = ({ onChange }) => {
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [startTime, setStartTime] = useState('')
-  const [endTime, setEndTime] = useState('')
+const DatesModule: React.FC<DatesModuleProps> = ({ onChange, currentCard }) => {
+  const [dates, setDates] = useState([
+    { type: 'start', date: '', time: '' },
+    { type: 'end', date: '', time: '' },
+  ])
   const [showTag, setShowTag] = useState(false)
-
+  useEffect(() => {
+    setDates(
+      currentCard?.modules?.dates || [
+        { type: 'start', date: '', time: '' },
+        { type: 'end', date: '', time: '' },
+      ]
+    )
+  }, [currentCard?.modules])
   const handleSave = () => {
     setShowTag(true)
   }
-
+  console.log('dates', dates)
   return (
     <div className='module-content'>
       {showTag ? (
@@ -22,7 +34,7 @@ const DatesModule: React.FC<DatesModuleProps> = ({ onChange }) => {
           className='date-tag cursor-pointer rounded bg-gray-100 px-2 py-1 hover:bg-gray-200'
           onClick={() => setShowTag(false)}
         >
-          {startDate} {startTime} 至 {endDate} {endTime}
+          {dates[0].date} {dates[0].time} 至 {dates[1].date} {dates[1].time}
         </div>
       ) : (
         <>
@@ -34,22 +46,44 @@ const DatesModule: React.FC<DatesModuleProps> = ({ onChange }) => {
                   <input
                     type='date'
                     className='w-full rounded border border-gray-300 px-2 py-1 text-gray-700'
-                    value={index === 0 ? startDate : endDate}
-                    onChange={(e) =>
-                      index === 0
-                        ? setStartDate(e.target.value)
-                        : setEndDate(e.target.value)
-                    }
+                    value={dates[index] ? dates[index]?.date : ''}
+                    onChange={(e) => {
+                      const newDates = [...dates]
+                      newDates[index].date = e.target.value
+                      if (newDates[index].type === 'start') {
+                        onChange(
+                          newDates,
+                          `Set the start date ${newDates[index].date}`
+                        )
+                      } else {
+                        onChange(
+                          newDates,
+                          `Set the expiration date ${newDates[index].date}`
+                        )
+                      }
+                      // setDates(newDates)
+                    }}
                   />
                   <input
                     type='time'
                     className='w-full rounded border border-gray-300 px-2 py-1'
-                    value={index === 0 ? startTime : endTime}
-                    onChange={(e) =>
-                      index === 0
-                        ? setStartTime(e.target.value)
-                        : setEndTime(e.target.value)
-                    }
+                    value={dates[index] ? dates[index]?.time : ''}
+                    onChange={(e) => {
+                      const newDates = [...dates]
+                      newDates[index].time = e.target.value
+                      if (newDates[index].type === 'start') {
+                        onChange(
+                          newDates,
+                          `Set the start date ${newDates[index].time}`
+                        )
+                      } else {
+                        onChange(
+                          newDates,
+                          `Set the expiration date ${newDates[index].time}`
+                        )
+                      }
+                      // setDates(newDates)
+                    }}
                   />
                 </div>
               </label>
