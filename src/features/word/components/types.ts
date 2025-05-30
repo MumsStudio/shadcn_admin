@@ -4,6 +4,7 @@ export interface ModuleConfig {
   name: string
   component: React.FC
   allowMultiple?: boolean
+  icon: any
 }
 
 export interface Card {

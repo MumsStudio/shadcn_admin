@@ -37,7 +37,7 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({
   return (
     <div className='module-content'>
       <div className='pb-2'>
-        <div className='flex justify-between text-sm'>
+        <div className='flex justify-between text-sm mb-2'>
           <span>{progress}%</span>
           <span>
             {items.filter((item) => item.checked).length}/{items.length}

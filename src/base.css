@@ -429,7 +429,7 @@ li.heading-3 {
 }
 
 .modal-section {
-  margin: 16px 0 !important;
+  /* margin: 16px 0 !important; */
 }
 .notselected{
   cursor: not-allowed!important;
@@ -477,7 +477,7 @@ li.heading-3 {
 }
 
 .description-content {
-  background-color: #f5f6f8 !important;
+  background-color: white !important;
   padding: 8px !important;
   width: 100% !important;
   border-radius: 4px !important;

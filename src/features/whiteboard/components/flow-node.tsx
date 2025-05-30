@@ -1,11 +1,11 @@
+import { useCallback } from 'react'
 import {
- IconPlayerPlay,
+  IconPlayerPlay,
   IconSortDescendingShapes,
   IconRepeat,
   IconProgress,
 } from '@tabler/icons-react'
-import { NodeProps, Handle, Position } from '@xyflow/react';
-
+import { NodeProps, Handle, Position } from '@xyflow/react'
 
 type FlowNodeData = {
   id: string
@@ -19,7 +19,16 @@ type FlowNodeData = {
   height?: number
 }
 
-const FlowNode = ({ data, id, selected }: NodeProps<FlowNodeData>) => {
+type FlowNodeProps = NodeProps<FlowNodeData> & {
+  onCreateNode: (
+    nodeType: string,
+    position: { x: number; y: number },
+    sourceHandle: string,
+    sourceNodeId: string
+  ) => void
+}
+
+const FlowNode = ({ data, id, selected, onCreateNode }: FlowNodeProps) => {
   const getNodeIcon = () => {
     switch (data.type) {
       case 'start':
@@ -34,6 +43,34 @@ const FlowNode = ({ data, id, selected }: NodeProps<FlowNodeData>) => {
         return null
     }
   }
+
+  const handleHandleClick = useCallback(
+    (position: Position, handleId: string, event: React.MouseEvent) => {
+      event.stopPropagation()
+
+      // 计算新节点的位置
+      const offsetX =
+        position === Position.Left
+          ? -150
+          : position === Position.Right
+            ? 150
+            : 0
+      const offsetY =
+        position === Position.Top
+          ? -100
+          : position === Position.Bottom
+            ? 100
+            : 0
+
+      const newNodePosition = {
+        x: data.position.x + offsetX,
+        y: data.position.y + offsetY,
+      }
+
+      onCreateNode(data.type, newNodePosition, handleId, id)
+    },
+    [data.position.x, data.position.y, data.type, id, onCreateNode]
+  )
 
   const getNodeStyle = () => {
     const baseStyle = {
@@ -62,12 +99,38 @@ const FlowNode = ({ data, id, selected }: NodeProps<FlowNodeData>) => {
 
   return (
     <div className='relative'>
-      <Handle type='source' position={Position.Bottom} id='bottom' />
-      <Handle type='target' position={Position.Top} id='top' />
+      <Handle
+        type='source'
+        position={Position.Bottom}
+        id='bottom'
+        onClick={(event) => handleHandleClick(Position.Bottom, 'bottom', event)}
+        className='h-3 w-3 cursor-pointer border-2 border-blue-500 bg-white hover:bg-blue-200'
+      />
+      <Handle
+        type='target'
+        position={Position.Top}
+        id='top'
+        onClick={(event) => handleHandleClick(Position.Top, 'top', event)}
+        className='h-3 w-3 cursor-pointer border-2 border-blue-500 bg-white hover:bg-blue-200'
+      />
       {data.type === 'decision' && (
         <>
-          <Handle type='source' position={Position.Left} id='left' />
-          <Handle type='source' position={Position.Right} id='right' />
+          <Handle
+            type='source'
+            position={Position.Left}
+            id='left'
+            onClick={(event) => handleHandleClick(Position.Left, 'left', event)}
+            className='h-3 w-3 cursor-pointer border-2 border-blue-500 bg-white hover:bg-blue-200'
+          />
+          <Handle
+            type='source'
+            position={Position.Right}
+            id='right'
+            onClick={(event) =>
+              handleHandleClick(Position.Right, 'right', event)
+            }
+            className='h-3 w-3 cursor-pointer border-2 border-blue-500 bg-white hover:bg-blue-200'
+          />
         </>
       )}
 

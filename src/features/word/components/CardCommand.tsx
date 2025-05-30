@@ -1,7 +1,7 @@
 // ListBox.tsx
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Node } from '@tiptap/core'
+import { mergeAttributes, Node } from '@tiptap/core'
 import { createPortal } from 'react-dom'
 import CardEditor from './CardEditor'
 import ListBoxContent from './ListBoxContent'
@@ -52,24 +52,30 @@ export const ListBox = Node.create<ListBoxOptions>({
       },
       cards: {
         default: [],
-        parseHTML: (element) =>
-          JSON.parse(element.getAttribute('data-cards') || '[]'),
-        renderHTML: (attributes) => ({
-          'data-cards': JSON.stringify(attributes.cards),
-        }),
+        // parseHTML: (element) => {
+        //   const cards = element.getAttribute('data-cards')
+        // },
       },
     }
   },
-
-  renderHTML({ node }) {
+  parseHTML() {
+    return [
+      {
+        tag: 'div[data-cards]',
+      },
+    ]
+  },
+  renderHTML({ node, HTMLAttributes }) {
     return [
       'div',
-      {
-        'data-list-box': '',
-        'data-cards': JSON.stringify(node.attrs.cards),
-        style: `width: ${node.attrs.width}; height: ${node.attrs.height};`,
-      },
-      0,
+      mergeAttributes(
+        {
+          class: 'list-box-container',
+          'data-cards': JSON.stringify(node.attrs.cards || []), // 将cards数组转为JSON字符串
+          style: `width: ${HTMLAttributes.width}; height: ${HTMLAttributes.height};`,
+        },
+        this.options.HTMLAttributes
+      ),
     ]
   },
   addCommands() {
@@ -91,13 +97,22 @@ export const ListBox = Node.create<ListBoxOptions>({
     }
   },
   addNodeView() {
-    return ({ node, getPos, editor }) => {
+    return ({ node, getPos, editor, HTMLAttributes }) => {
       const ListBoxComponent = () => {
         const [isMenuOpen, setMenuOpen] = useState(false)
         const [isModalOpen, setModalOpen] = useState(false)
         const [activeModules, setActiveModules] = useState<string[]>([])
         const [cards, setCards] = useState<Card[]>(node.attrs.cards)
         const ModalRef = React.useRef<HTMLDivElement>(null)
+        useEffect(() => {
+          if (!cards || cards.length === 0) {
+            return
+          }
+          editor.commands.updateAttributes('listBox', {
+            cards: cards,
+          })
+          console.log('cards', node.attrs.cards)
+        }, [cards])
 
         const handleAddCardClick = () => {
           setCards([
@@ -147,6 +162,7 @@ export const ListBox = Node.create<ListBoxOptions>({
           e.stopPropagation()
           console.log('handleModalClose')
           setCurrentClickCard(null)
+          setActiveModules([])
           setModalOpen(false)
         }
 

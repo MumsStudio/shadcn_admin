@@ -71,7 +71,7 @@ const CustomFieldsModule: React.FC<CustomFieldsModuleProps> = ({
 
     const updatedFields = [...fields, field]
     // setFields(updatedFields)
-    console.log('addField', field)
+    // console.log('addField', field)
     onChange(updatedFields, `addField:${field.name}`)
     setIsAddingField(false)
     setNewField({ type: 'text' })

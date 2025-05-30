@@ -53,9 +53,9 @@ const ListBoxHeader: React.FC<ListBoxHeaderProps> = ({
         </button>
         {isMenuOpen && (
           <div className='list-box-menu-dropdown absolute right-0 mt-2 rounded border border-gray-300 bg-white shadow'>
-            <button className='list-box-menu-item block px-2 py-1 hover:bg-gray-100'>
+            {/* <button className='list-box-menu-item block px-2 py-1 hover:bg-gray-100'>
               编辑盒子
-            </button>
+            </button> */}
             <button
               className='list-box-menu-item delete-item block px-2 py-1 hover:bg-gray-100'
               onClick={handleDeleteClick}

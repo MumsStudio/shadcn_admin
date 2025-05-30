@@ -48,18 +48,22 @@ export default function Word() {
       }
     })
   }
+  const cards = localStorage.getItem('cards')
+  const parsedCards = cards ? JSON.parse(cards) : {}
   // 保存文档
   const saveDocument = async () => {
- 
-    Request._UpdateDocumentDetail(id, {
+    const updateContent = {
       content,
-      // boardData, // 将canvas数据一起保存到后端
-    }).then((res: any) => {
-      if (res) {
-        console.log(res, 'res')
-        setLastSaved('刚刚')
+      // ...parsedCards,
+    }
+    Request._UpdateDocumentDetail(id, { content }).then(
+      (res: any) => {
+        if (res) {
+          console.log(res, 'res')
+          setLastSaved('刚刚')
+        }
       }
-    })
+    )
   }
 
   useEffect(() => {
@@ -79,9 +83,11 @@ export default function Word() {
   const [linkPopupProps, setLinkPopupProps] = useState<any>({})
   useEffect(() => {
     if (!content) return
+    console.log(cards, 'cards')
     const debouncedSaveDocument = debounce(saveDocument, 800)
     debouncedSaveDocument()
-  }, [content])
+  }, [content, cards])
+
   const formatLastEditedTime = (timestamp: string) => {
     const now = new Date()
     const editedTime = new Date(timestamp)
@@ -423,8 +429,6 @@ export default function Word() {
     }
   }, [editor, headings, activeHeadingId])
 
-
-
   useEffect(() => {
     if (!editor) return
 
@@ -493,7 +497,7 @@ export default function Word() {
     <>
       <Main className='overflow-hidden'>
         {/* 顶部导航栏 */}
-        <div className='sticky top-0 z-10 flex h-16 text-[2rem] items-center justify-between border-b bg-white px-4'>
+        <div className='sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-4 text-[2rem]'>
           <div className='flex items-center space-x-4'>
             {/* <button className='flex items-center space-x-1 rounded p-1 hover:bg-gray-100'>
               <IconMenu className='h-5 w-5 text-gray-500' />
@@ -519,14 +523,14 @@ export default function Word() {
           </div>
 
           <div className='flex items-center space-x-2'>
-            <div className='flex items-center space-x-1 text-[14px] text-gray-500 pr-[8px]'>
+            <div className='flex items-center space-x-1 pr-[8px] text-[14px] text-gray-500'>
               <span>最后保存: {lastSaved}</span>
             </div>
 
-            <div className='flex items-center space-x-1 text-[1rem] gap-1'>
+            <div className='flex items-center gap-1 space-x-1 text-[1rem]'>
               <button
                 onClick={() => setShowHistoryPanel(true)}
-                className='flex items-center space-x-1 rounded text-gray-600 p-2 hover:bg-gray-100'
+                className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'
               >
                 <IconHistory size={18} />
                 <span>历史</span>
@@ -597,7 +601,17 @@ export default function Word() {
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             className='fixed top-[90px] left-4 z-50 h-8 w-8 -translate-y-1/2 rounded-full p-1 text-[26px] text-gray-500'
           >
-            {isSidebarCollapsed ? <IconLayoutSidebarRightCollapse size={30} className='hover:text-blue-400'/> : <IconLayoutSidebarRightExpand size={30} className='hover:text-blue-400'/>}
+            {isSidebarCollapsed ? (
+              <IconLayoutSidebarRightCollapse
+                size={30}
+                className='hover:text-blue-400'
+              />
+            ) : (
+              <IconLayoutSidebarRightExpand
+                size={30}
+                className='hover:text-blue-400'
+              />
+            )}
           </button>
 
           {/* 中间Markdown编辑器 */}

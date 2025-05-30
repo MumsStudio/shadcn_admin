@@ -1,6 +1,16 @@
 // CardEditor.tsx
 import React, { useState, useEffect } from 'react'
-import { IconCircleX, IconEdit, IconTrashX } from '@tabler/icons-react'
+import {
+  IconCalendarWeekFilled,
+  IconCheckbox,
+  IconCircleX,
+  IconMenuDeep,
+  IconMessage,
+  IconPaperclip,
+  IconSquareRoundedPlus2,
+  IconTag,
+  IconUser,
+} from '@tabler/icons-react'
 import { useAuthStore } from '@/stores/authStore'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Request from '../request'
@@ -36,17 +46,28 @@ const CardEditor: React.FC<CardEditorProps> = ({
   const [currentCard, setCurrentCard] = useState<Card | null>(null)
   const [user, getUser] = useState<any>({})
   const [description, setDescription] = useState('')
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [isEditingDescrip, setIsEditingDescrip] = useState(false)
+  const [name, setName] = useState('')
+  useEffect(() => {
+    if (currentCard) {
+      setName(currentCard.modules?.name || '')
+    }
+  }, [currentCard?.modules?.name])
   useEffect(() => {
     setDescription(currentCard?.modules?.description || '')
   }, [currentCard?.modules?.description])
   useEffect(() => {
     if (cards.length > 0) {
       setCurrentCard(cards[cards.length - 1])
+      console.log('currentCard:', currentCard)
     }
   }, [cards.length])
   useEffect(() => {
     if (currentClickCard) {
       setCurrentCard(currentClickCard)
+      setActiveModules(Object.keys(currentClickCard.modules || {}))
+      console.log('currentClickCard:', currentClickCard)
     }
   }, [currentClickCard])
   const handleAddModule = (moduleId: string) => {
@@ -58,7 +79,10 @@ const CardEditor: React.FC<CardEditorProps> = ({
     } else {
       const exists = activeModules.includes(moduleId)
       if (!exists) {
-        setActiveModules([...activeModules, moduleId])
+        if (moduleId === 'members') {
+          setActiveModules([moduleId, ...activeModules])
+          console.log('handleAddModule:', activeModules)
+        } else setActiveModules([...activeModules, moduleId])
       }
     }
     if (moduleId === 'dates') {
@@ -116,10 +140,12 @@ const CardEditor: React.FC<CardEditorProps> = ({
     }
     getUserInfo()
   }, [isModalOpen])
+  const buttonIconsize = 18
   const availableModules: ModuleConfig[] = [
     {
       id: 'members',
       name: '成员',
+      icon: <IconUser size={buttonIconsize}/>,
       component: (props) => (
         <MembersModule
           {...props}
@@ -134,6 +160,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
     {
       id: 'labels',
       name: '标签',
+      icon: <IconTag size={buttonIconsize} />,
       component: (props) => (
         <LabelsModule
           {...props}
@@ -148,6 +175,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
     {
       id: 'checklist',
       name: '清单',
+      icon: <IconCheckbox size={buttonIconsize} />,
       component: (props) => (
         <ChecklistModule
           {...props}
@@ -162,6 +190,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
     {
       id: 'dates',
       name: '日期',
+      icon: <IconCalendarWeekFilled size={buttonIconsize} />,
       component: (props) => (
         <DatesModule
           {...props}
@@ -176,6 +205,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
     {
       id: 'attachments',
       name: '附件',
+      icon: <IconPaperclip size={buttonIconsize} />,
       component: (props) => (
         <AttachmentsModule
           {...props}
@@ -190,6 +220,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
     {
       id: 'customFields',
       name: '自定义字段',
+      icon: <IconSquareRoundedPlus2 size={buttonIconsize} />,
       component: (props) => (
         <CustomFieldsModule
           {...props}
@@ -209,7 +240,42 @@ const CardEditor: React.FC<CardEditorProps> = ({
       <div className='modal-wrapper rounded bg-white p-1 shadow'>
         <div>
           <div className='mb-[8px] flex justify-between px-2 pt-2 text-[20px] font-bold text-[#172b4d]'>
-            <div>{currentCard?.name || '待办'}</div>
+            {isEditingName ? (
+              <input
+                className='w-full border-b-2 border-blue-500 outline-none'
+                value={name || ''}
+                onChange={
+                  (e) => setName(e.target.value)
+                  // setCurrentCard({ ...currentCard, name: e.target.value })
+                }
+                onBlur={(e) => {
+                  handleModuleChange(
+                    'name',
+                    e.target.value,
+                    `updateCardName: ${name}`
+                  )
+                  setIsEditingName(false)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleModuleChange(
+                      'name',
+                      e.currentTarget.value,
+                      `updateCardName: ${name}`
+                    )
+                    e.currentTarget.blur()
+                  }
+                }}
+                autoFocus
+              />
+            ) : (
+              <div
+                onClick={() => setIsEditingName(true)}
+                className='cursor-pointer hover:bg-gray-100'
+              >
+                {name || '卡片名'}
+              </div>
+            )}
             <button
               onClick={handleModalClose}
               className='rounded px-2 py-1 text-gray-100'
@@ -220,46 +286,58 @@ const CardEditor: React.FC<CardEditorProps> = ({
         </div>
 
         <div className='modal-content flex'>
-          <div className='mr-1 w-[55%] overflow-y-auto !px-[10px] !py-4'>
-            <div className='flex gap-2'>
+          <div className='mr-1 w-[65%] overflow-y-auto !px-[10px] !py-4'>
+            <div className='flex flex-wrap items-center gap-3 mb-4'>
               {availableModules.map((module) => (
                 <button
                   key={module.id}
-                  className='flex h-[30px] w-auto gap-2 rounded bg-gray-200 px-2 py-1 text-gray-700 hover:bg-gray-300'
+                  className='flex w-auto items-center rounded border px-2 py-1 text-[14px] text-gray-700 hover:bg-gray-300'
                   onClick={() => handleAddModule(module.id)}
                 >
+                  <div className='mr-[4px]'>{module.icon}</div>
                   {module.name}
                 </button>
               ))}
             </div>
-            <div className='modal-section'>
-              <h3>描述</h3>
-              <input
-                className='description-content'
-                value={description || ''}
-                placeholder='添加详细描述...'
-                onBlur={(e) => {
-                  handleModuleChange(
-                    'description',
-                    e.target.value,
-                    'updateDescription'
-                  )
-                  // e.target.value = ''
-                }}
-                onChange={(e) => {
-                  setDescription(e.target.value)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+            <div className='py-2'>
+              <div className='flex items-center text-[16px] font-bold text-[#5e6c84]'>
+                <div className='mr-2'>
+                  <IconMenuDeep className='h-4 w-4' />
+                </div>
+                <div>描述</div>
+              </div>
+             
+              {isEditingDescrip ? (
+                <input
+                  className='description-content border-none bg-white'
+                  value={description || ''}
+                  placeholder='添加详细描述...'
+                  onBlur={(e) => {
                     handleModuleChange(
                       'description',
-                      e.currentTarget.value,
+                      e.target.value,
                       'updateDescription'
                     )
-                    e.currentTarget.blur()
-                  }
-                }}
-              />
+                    // e.target.value = ''
+                    setIsEditingDescrip(false)
+                  }}
+                  onChange={(e) => {
+                    setDescription(e.target.value)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleModuleChange(
+                        'description',
+                        e.currentTarget.value,
+                        'updateDescription'
+                      )
+                      e.currentTarget.blur()
+                      setIsEditingDescrip(false)
+                    }
+                  }}
+                  autoFocus
+                />
+              ):( <div className='py-1 pl-2 text-[.875rem] text-gray-400' onClick={() => setIsEditingDescrip(true)}>{description ||'添加详细描述...'}</div>)}
             </div>
 
             {activeModules.map((moduleId, index) => {
@@ -273,7 +351,8 @@ const CardEditor: React.FC<CardEditorProps> = ({
                 >
                   <div className='module-container'>
                     <div className='mb-2 flex items-center justify-between'>
-                      <div className='text-[16px] font-bold text-[#5e6c84]'>
+                      <div className='flex items-center justify-center text-[16px] font-bold text-[#5e6c84]'>
+                        <div className='mr-2'>{module.icon}</div>
                         {module.name}
                       </div>
                       <button
@@ -292,8 +371,13 @@ const CardEditor: React.FC<CardEditorProps> = ({
 
           <div className='flex-1 overflow-y-auto bg-gray-100 px-2 py-1'>
             <div className='modal-section'>
-              <div className='p-2 text-[16px] font-bold text-[#5e6c84]'>
-                评论和活动
+              <div className='p-2 pt-0 text-[16px] font-bold text-[#5e6c84]'>
+                <div className='flex items-center'>
+                  <div>
+                    <IconMessage size={16} className='mr-2' />
+                  </div>
+                  <div>评论和活动</div>
+                </div>
               </div>
               <input
                 className='w-full rounded-md bg-gray-300 p-2 text-[#5e6c84]'
@@ -329,7 +413,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
                 .map((action, index) => (
                   <div key={`${index}-${action.timestamp}`} className='flex'>
                     <div className='mr-2 flex items-center'>
-                      <Avatar className='z-1 size-12'>
+                      <Avatar className='z-1 size-10'>
                         <AvatarImage src={''} alt={'2345'} />
                         <AvatarFallback className='bg-[#2CB0C8]'>
                           {`${user.firstName ? user.firstName.substring(0, 1) : ''}${user.lastName ? user.lastName.substring(0, 1) : ''}` ||
@@ -338,7 +422,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
                       </Avatar>
                     </div>
                     <div className='flex flex-col py-2'>
-                      <div className='flex flex-col text-[16px] text-gray-700'>
+                      <div className='flex flex-col text-[14px] text-gray-700'>
                         <span className='font-bold'>{email} </span>
 
                         {action.action.startsWith('remark') ? (
@@ -442,7 +526,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
                             </div>
                           </div>
                         ) : (
-                          <span className='text-[14px] font-semibold'>
+                          <span className='text-[12px] font-semibold'>
                             {action.action}
                           </span>
                         )}
