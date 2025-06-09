@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { IconPointer, IconRectangle, IconTextCaption, IconLink, IconZoomIn, IconZoomOut, IconZoomReset, IconLetterT, IconNote, IconVectorSpline, IconHandClick, IconCircle, IconPencil, IconArrowBackUp, IconArrowForwardUp, IconTrash, IconLock, IconBoxMultipleFilled, IconBoxMultiple, IconArrowUpRight, IconBackslash, IconTriangle, IconSquare, IconPhoto, IconVideo, IconTable, IconCopy, IconClipboard, IconCut, IconMath, IconSortDescendingShapes, IconRepeat, IconProgress, IconPlayerPlay, IconHistory, IconShare, IconDeviceFloppy, IconArrowUpFromArc } from '@tabler/icons-react';
+import { IconPointer, IconRectangle, IconTextCaption, IconLink, IconZoomIn, IconZoomOut, IconZoomReset, IconLetterT, IconNote, IconVectorSpline, IconHandClick, IconCircle, IconPencil, IconArrowBackUp, IconArrowForwardUp, IconTrash, IconLock, IconBoxMultipleFilled, IconBoxMultiple, IconArrowUpRight, IconBackslash, IconTriangle, IconSquare, IconPhoto, IconVideo, IconTable, IconCopy, IconClipboard, IconCut, IconMath, IconSortDescendingShapes, IconRepeat, IconProgress, IconPlayerPlay, IconHistory, IconShare, IconDeviceFloppy, IconArrowUpFromArc, IconPolygon, IconCards } from '@tabler/icons-react';
 import { Route } from '@/routes/whiteboard/detail.$id';
 import { ReactFlow, Controls, Background, Panel, useReactFlow, useNodesState, useEdgesState, Connection, ReactFlowProvider, addEdge, BackgroundVariant, Node, Edge, NodeTypes, NodeProps, ConnectionMode, MarkerType, useViewport, Handle, Position, ConnectionLineType } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -7,6 +7,7 @@ import { showSuccessData } from '@/utils/show-submitted-data';
 import Request from '../request';
 import { HistoryPanel } from './HistoryPanel';
 import ArrowNode from './arrow-node';
+import CardNode from './card-node';
 import CircleNode from './circle-node';
 import ExpandableRectangleNode from './expandable-rectangle-node';
 import FlowNode from './flow-node';
@@ -67,6 +68,7 @@ type WhiteboardNode = Node<WhiteboardNodeData> & {
     | 'process'
     | 'decision'
     | 'flow'
+    | 'card'
 }
 
 type WhiteboardEdge = Edge
@@ -86,6 +88,7 @@ const nodeTypes: any = {
   table: TableNode,
   video: VideoNode,
   formula: FormulaNode,
+  card: CardNode,
   // start: FlowNode,
   // end: FlowNode,
   // process: FlowNode,
@@ -93,7 +96,7 @@ const nodeTypes: any = {
   // flow: FlowNode,
 }
 function WhiteboardFlow() {
-    // 初始节点定义
+  // 初始节点定义
   const initialNodes: WhiteboardNode[] = [
     {
       id: '1',
@@ -154,6 +157,7 @@ function WhiteboardFlow() {
     | 'video'
     | 'formula'
     | 'flow'
+    | 'card'
   >('pointer')
   const [isDragging, setIsDragging] = useState(false)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -468,6 +472,7 @@ function WhiteboardFlow() {
         | 'video'
         | 'formula'
         | 'table'
+        | 'card'
         | 'flow',
       position: { x: number; y: number }
     ) => {
@@ -653,7 +658,7 @@ function WhiteboardFlow() {
       { id: 'line', title: '线条', icon: <IconBackslash /> },
       { id: 'circle', title: '圆形', icon: <IconCircle /> },
       { id: 'triangle', title: '三角形', icon: <IconTriangle /> },
-      { id: 'polygon', title: '多边形', icon: <IconSquare /> },
+      { id: 'polygon', title: '多边形', icon: <IconPolygon /> },
       { id: 'freeDraw', title: '自由绘图', icon: <IconPencil /> },
       { id: 'arrow', title: '箭头', icon: <IconArrowUpRight /> },
       { id: 'image', title: '图片', icon: <IconPhoto /> },
@@ -661,6 +666,7 @@ function WhiteboardFlow() {
       { id: 'table', title: '表格', icon: <IconTable /> },
       { id: 'formula', title: '公式', icon: <IconMath /> },
       { id: 'flow', title: '流程图', icon: <IconArrowUpFromArc /> },
+      { id: 'cardcard', title: '卡片', icon: <IconCards /> },
       // { id: 'end', title: '结束', icon: <IconSortDescendingShapes /> },
       // { id: 'process', title: '处理', icon: <IconProgress /> },
       // { id: 'decision', title: '判断', icon: <IconRepeat /> },

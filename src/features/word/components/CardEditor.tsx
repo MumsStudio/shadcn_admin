@@ -213,6 +213,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
           onChange={(data, action) => {
             handleModuleChange('attachments', data, action)
           }}
+          user = {user}
         />
       ),
       allowMultiple: true,

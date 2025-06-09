@@ -28,12 +28,14 @@ import { Route as AuthenticatedWordIndexImport } from './routes/_authenticated/w
 import { Route as AuthenticatedWhiteboardIndexImport } from './routes/_authenticated/whiteboard/index'
 import { Route as AuthenticatedUsersIndexImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTasksIndexImport } from './routes/_authenticated/tasks/index'
+import { Route as AuthenticatedTableIndexImport } from './routes/_authenticated/table/index'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedHelpCenterIndexImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedChatsIndexImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexImport } from './routes/_authenticated/apps/index'
 import { Route as WordDetailIdImport } from './routes/word/detail.$id'
 import { Route as WhiteboardDetailIdImport } from './routes/whiteboard/detail.$id'
+import { Route as TableDetailIdImport } from './routes/table/detail.$id'
 import { Route as AuthenticatedSettingsNotificationsImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceImport } from './routes/_authenticated/settings/appearance'
@@ -145,6 +147,12 @@ const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexImport.update({
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
+const AuthenticatedTableIndexRoute = AuthenticatedTableIndexImport.update({
+  id: '/table/',
+  path: '/table/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+
 const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
   {
     id: '/',
@@ -181,6 +189,12 @@ const WordDetailIdRoute = WordDetailIdImport.update({
 const WhiteboardDetailIdRoute = WhiteboardDetailIdImport.update({
   id: '/whiteboard/detail/$id',
   path: '/whiteboard/detail/$id',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const TableDetailIdRoute = TableDetailIdImport.update({
+  id: '/table/detail/$id',
+  path: '/table/detail/$id',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -335,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsNotificationsImport
       parentRoute: typeof AuthenticatedSettingsRouteImport
     }
+    '/table/detail/$id': {
+      id: '/table/detail/$id'
+      path: '/table/detail/$id'
+      fullPath: '/table/detail/$id'
+      preLoaderRoute: typeof TableDetailIdImport
+      parentRoute: typeof rootRoute
+    }
     '/whiteboard/detail/$id': {
       id: '/whiteboard/detail/$id'
       path: '/whiteboard/detail/$id'
@@ -376,6 +397,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexImport
       parentRoute: typeof AuthenticatedSettingsRouteImport
+    }
+    '/_authenticated/table/': {
+      id: '/_authenticated/table/'
+      path: '/table'
+      fullPath: '/table'
+      preLoaderRoute: typeof AuthenticatedTableIndexImport
+      parentRoute: typeof AuthenticatedRouteImport
     }
     '/_authenticated/tasks/': {
       id: '/_authenticated/tasks/'
@@ -439,6 +467,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedTableIndexRoute: typeof AuthenticatedTableIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedWhiteboardIndexRoute: typeof AuthenticatedWhiteboardIndexRoute
@@ -451,6 +480,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
+  AuthenticatedTableIndexRoute: AuthenticatedTableIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedWhiteboardIndexRoute: AuthenticatedWhiteboardIndexRoute,
@@ -478,12 +508,14 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/table/detail/$id': typeof TableDetailIdRoute
   '/whiteboard/detail/$id': typeof WhiteboardDetailIdRoute
   '/word/detail/$id': typeof WordDetailIdRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/table': typeof AuthenticatedTableIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/whiteboard': typeof AuthenticatedWhiteboardIndexRoute
@@ -506,12 +538,14 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/table/detail/$id': typeof TableDetailIdRoute
   '/whiteboard/detail/$id': typeof WhiteboardDetailIdRoute
   '/word/detail/$id': typeof WordDetailIdRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/table': typeof AuthenticatedTableIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/whiteboard': typeof AuthenticatedWhiteboardIndexRoute
@@ -537,12 +571,14 @@ export interface FileRoutesById {
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/table/detail/$id': typeof TableDetailIdRoute
   '/whiteboard/detail/$id': typeof WhiteboardDetailIdRoute
   '/word/detail/$id': typeof WordDetailIdRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/table/': typeof AuthenticatedTableIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/whiteboard/': typeof AuthenticatedWhiteboardIndexRoute
@@ -569,12 +605,14 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/table/detail/$id'
     | '/whiteboard/detail/$id'
     | '/word/detail/$id'
     | '/apps'
     | '/chats'
     | '/help-center'
     | '/settings/'
+    | '/table'
     | '/tasks'
     | '/users'
     | '/whiteboard'
@@ -596,12 +634,14 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/table/detail/$id'
     | '/whiteboard/detail/$id'
     | '/word/detail/$id'
     | '/apps'
     | '/chats'
     | '/help-center'
     | '/settings'
+    | '/table'
     | '/tasks'
     | '/users'
     | '/whiteboard'
@@ -625,12 +665,14 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
+    | '/table/detail/$id'
     | '/whiteboard/detail/$id'
     | '/word/detail/$id'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
     | '/_authenticated/help-center/'
     | '/_authenticated/settings/'
+    | '/_authenticated/table/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
     | '/_authenticated/whiteboard/'
@@ -650,6 +692,7 @@ export interface RootRouteChildren {
   errors404Route: typeof errors404Route
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
+  TableDetailIdRoute: typeof TableDetailIdRoute
   WhiteboardDetailIdRoute: typeof WhiteboardDetailIdRoute
   WordDetailIdRoute: typeof WordDetailIdRoute
 }
@@ -666,6 +709,7 @@ const rootRouteChildren: RootRouteChildren = {
   errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
+  TableDetailIdRoute: TableDetailIdRoute,
   WhiteboardDetailIdRoute: WhiteboardDetailIdRoute,
   WordDetailIdRoute: WordDetailIdRoute,
 }
@@ -691,6 +735,7 @@ export const routeTree = rootRoute
         "/(errors)/404",
         "/(errors)/500",
         "/(errors)/503",
+        "/table/detail/$id",
         "/whiteboard/detail/$id",
         "/word/detail/$id"
       ]
@@ -703,6 +748,7 @@ export const routeTree = rootRoute
         "/_authenticated/apps/",
         "/_authenticated/chats/",
         "/_authenticated/help-center/",
+        "/_authenticated/table/",
         "/_authenticated/tasks/",
         "/_authenticated/users/",
         "/_authenticated/whiteboard/",
@@ -770,6 +816,9 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/settings/notifications.tsx",
       "parent": "/_authenticated/settings"
     },
+    "/table/detail/$id": {
+      "filePath": "table/detail.$id.tsx"
+    },
     "/whiteboard/detail/$id": {
       "filePath": "whiteboard/detail.$id.tsx"
     },
@@ -791,6 +840,10 @@ export const routeTree = rootRoute
     "/_authenticated/settings/": {
       "filePath": "_authenticated/settings/index.tsx",
       "parent": "/_authenticated/settings"
+    },
+    "/_authenticated/table/": {
+      "filePath": "_authenticated/table/index.tsx",
+      "parent": "/_authenticated"
     },
     "/_authenticated/tasks/": {
       "filePath": "_authenticated/tasks/index.tsx",

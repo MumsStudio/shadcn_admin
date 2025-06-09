@@ -16,6 +16,7 @@ import {
   IconPalette,
   IconServerOff,
   IconSettings,
+  IconTableDashed,
   IconTool,
   IconUserCog,
   IconUserOff,
@@ -69,6 +70,11 @@ export const sidebarData: SidebarData = {
           title: 'Whiteboard',
           url: '/whiteboard',
           icon: IconChalkboard,
+        },
+        {
+          title: 'Table',
+          url: '/table',
+          icon: IconTableDashed,
         },
         {
           title: 'Apps',
