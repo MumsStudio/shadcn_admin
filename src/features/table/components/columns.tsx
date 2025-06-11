@@ -6,9 +6,9 @@ import Request from '../request';
 
 
 export const columns = ({
-  getWhiteboards,
+  getTables,
 }: {
-  getWhiteboards: () => Promise<void>
+  getTables: () => Promise<void>
 }): ColumnDef<any>[] => [
   {
     accessorKey: 'name',
@@ -37,14 +37,14 @@ export const columns = ({
   {
     id: 'actions',
     cell: ({ row }) => {
-      const whiteboard = row.original
+      const table = row.original
 
       const handleDelete = async () => {
         try {
-          await Request._DeleteWhiteboard(whiteboard.id)
-          await getWhiteboards()
+          await Request._DeleteTable(table.id)
+          await getTables()
         } catch (error) {
-          console.error('Error deleting whiteboard:', error)
+          console.error('Error deleting table:', error)
         }
       }
 
@@ -59,7 +59,7 @@ export const columns = ({
             <DropdownMenuItem
               onClick={() => {
                 // Navigate to edit page
-                window.open(`/table/detail/${whiteboard.id}`, '_blank')
+                window.open(`/table/detail/${table.id}`, '_blank')
               }}
             >
               <Edit className='mr-2 h-4 w-4' /> Edit

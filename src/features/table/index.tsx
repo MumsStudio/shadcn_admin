@@ -6,55 +6,54 @@ import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { columns } from './components/columns';
 import { DataTable } from './components/data-table';
-import { CreateWhiteboardDialog } from './components/dialog';
-import Request from './request'
+import { CreateTableDialog } from './components/dialog'
+import Request from './request';
 
 
-export default function Whiteboard() {
-  const [whiteboards, setWhiteboards] = useState<any[]>([
-    {
-      id: '1',
-      name: '项目规划',
-      createdAt: '2023-05-15T10:30:00Z',
-      updatedAt: '2023-05-20T14:15:00Z',
-    },
-    {
-      id: '2',
-      name: '产品设计',
-      createdAt: '2023-06-02T09:45:00Z',
-      updatedAt: '2023-06-10T16:20:00Z',
-    },
-    {
-      id: '3',
-      name: '开发任务',
-      createdAt: '2023-06-15T13:00:00Z',
-      updatedAt: '2023-06-18T11:30:00Z',
-    },
+export default function Table() {
+  const [tables, setTables] = useState<any[]>([
+    // {
+    //   id: '1',
+    //   name: '项目规划',
+    //   createdAt: '2023-05-15T10:30:00Z',
+    //   updatedAt: '2023-05-20T14:15:00Z',
+    // },
+    // {
+    //   id: '2',
+    //   name: '产品设计',
+    //   createdAt: '2023-06-02T09:45:00Z',
+    //   updatedAt: '2023-06-10T16:20:00Z',
+    // },
+    // {
+    //   id: '3',
+    //   name: '开发任务',
+    //   createdAt: '2023-06-15T13:00:00Z',
+    //   updatedAt: '2023-06-18T11:30:00Z',
+    // },
   ])
   useEffect(() => {
-    // getWhiteboards()
+    getTables()
   }, [])
-  const getWhiteboards = async () => {
-    // Request._GetWhiteboard().then((res: any) => {
-    //   if (res.data) {
-    //     setWhiteboards(res.data)
-    //   }
-    // })
+  const getTables = async () => {
+    Request._GetTable().then((res: any) => {
+      if (res.data) {
+        setTables(res.data)
+      }
+    })
   }
 
   const [dialogOpen, setDialogOpen] = useState(false)
-  const createNewWhiteboard = async (name: string) => {
+  const createNewTable = async (name: string) => {
     try {
-      // await Request._AddWhiteboard({ name: name }).then((res: any) => {
-      //   if (res.data) {
-      //     showSuccessData('create success')
-      //     // setWhiteboards([...whiteboards, res.data])
-      //   }
-      // })
-      // getWhiteboards()
+      await Request._AddTable({ name: name }).then((res: any) => {
+        if (res.data) {
+          showSuccessData('create success')
+        }
+      })
+      getTables()
     } catch (error) {
-      showErrorData(`Error creating whiteboard: ${error}`)
-      console.error('Error creating whiteboard:', error)
+      showErrorData(`Error creating table: ${error}`)
+      console.error('Error creating table:', error)
     }
   }
 
@@ -64,12 +63,12 @@ export default function Whiteboard() {
         <div className='ml-auto flex items-center space-x-4'>
           <>
             <Button onClick={() => setDialogOpen(true)}>
-              <Plus className='mr-2 h-4 w-4' /> New Whiteboard
+              <Plus className='mr-2 h-4 w-4' /> New Table
             </Button>
-            <CreateWhiteboardDialog
+            <CreateTableDialog
               open={dialogOpen}
               onOpenChange={setDialogOpen}
-              onSubmit={createNewWhiteboard}
+              onSubmit={createNewTable}
             />
           </>
         </div>
@@ -78,14 +77,14 @@ export default function Whiteboard() {
       <Main>
         <div className='mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Whiteboards</h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Tables</h2>
             <p className='text-muted-foreground'>
-              Here's a list of your whiteboards!
+              Here's a list of your tables!
             </p>
           </div>
         </div>
         <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-          <DataTable data={whiteboards} columns={columns({ getWhiteboards })} />
+          <DataTable data={tables} columns={columns({ getTables })} />
         </div>
       </Main>
     </>

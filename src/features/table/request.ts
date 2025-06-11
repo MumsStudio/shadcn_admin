@@ -3,64 +3,56 @@ import axios from '@/api/base';
 
 
 export default {
-  /**获取白板 */
-  _GetWhiteboard: (data: any = {}) => {
+  /**获取表格*/
+  _GetTable: (data: any = {}) => {
     return axios({
       method: 'get',
-      url: '/whiteboard',
+      url: '/table',
       param: data,
     })
   },
-  // /更新白板
-  _UpdateWhiteboard: (id: any, data: any) => {
-    return axios({
-      method: 'post',
-      url: `/whiteboard/${id}`,
-      data: data,
-    })
-  },
-  // /删除白板
-  _DeleteWhiteboard: (id: any) => {
+  // /删除表格
+  _DeleteTable: (id: any) => {
     return axios({
       method: 'delete',
-      url: `/whiteboard/${id}`,
+      url: `/table/${id}`,
     })
   },
-  // 新增白板
-  _AddWhiteboard: (data: any) => {
+  // 新增表格
+  _AddTable: (data: any) => {
     return axios({
       method: 'post',
-      url: '/whiteboard',
+      url: '/table',
       data: data,
     })
   },
-  // 获取白板详情
-  _GetWhiteboardDetail: (id: any) => {
+  // 获取表格详情
+  _GetTableDetail: (id: any) => {
     return axios({
       method: 'get',
-      url: `/whiteboard/${id}`,
+      url: `/table/${id}`,
     })
   },
-  // 更新白板详情
-  _UpdateWhiteboardDetail: (id: any, data: any) => {
+  // 更新表格详情
+  _UpdateTableDetail: (id: any, data: any) => {
     return axios({
       method: 'patch',
-      url: `/whiteboard/${id}`,
+      url: `/table/${id}`,
       data: data,
     })
   },
-  // 获取白板历史记录
-  _GetWhiteboardHistory: (id: any) => {
+  // 获取表格历史记录
+  _GetTableHistory: (id: any) => {
     return axios({
       method: 'get',
-      url: `/whiteboard/${id}/history`,
+      url: `/table/${id}/history`,
     })
   },
-  // 设置白板权限
-  _SetWhiteboardPermission: (id: any) => {
+  // 设置表格权限
+  _SetTablePermission: (id: any) => {
     return axios({
       method: 'post',
-      url: `/whiteboard/${id}/permissions`,
+      url: `/table/${id}/permissions`,
     })
   }
 }

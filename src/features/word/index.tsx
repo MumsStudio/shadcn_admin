@@ -31,6 +31,7 @@ import { Link } from './components/LinkCommand';
 import { Board } from './components/board';
 import { Video } from './components/video';
 import Request from './request';
+import { formatLastEditedTime } from '@/utils/common';
 
 
 export default function Word() {
@@ -88,25 +89,6 @@ export default function Word() {
     debouncedSaveDocument()
   }, [content, cards])
 
-  const formatLastEditedTime = (timestamp: string) => {
-    const now = new Date()
-    const editedTime = new Date(timestamp)
-    const diffInMs = now.getTime() - editedTime.getTime()
-    const diffInSec = Math.floor(diffInMs / 1000)
-    const diffInMin = Math.floor(diffInSec / 60)
-    const diffInHrs = Math.floor(diffInMin / 60)
-    const diffInDays = Math.floor(diffInHrs / 24)
-
-    if (diffInDays > 0) {
-      return editedTime.toLocaleString()
-    } else if (diffInHrs > 0) {
-      return `${diffInHrs}小时前`
-    } else if (diffInMin > 0) {
-      return `${diffInMin}分钟前`
-    } else {
-      return `${diffInSec}秒前`
-    }
-  }
 
   const editor: any = useEditor({
     extensions: [

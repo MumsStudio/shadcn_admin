@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 
-export function CreateWhiteboardDialog({
+export function CreateTableDialog({
   open,
   onOpenChange,
   onSubmit,
@@ -38,13 +38,13 @@ export function CreateWhiteboardDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>创建新白板</DialogTitle>
+          <DialogTitle>创建新表格</DialogTitle>
         </DialogHeader>
         <div className='space-y-4'>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder='输入白板名称'
+            placeholder='输入表格名称'
           />
           <div className='flex justify-end space-x-2'>
             <Button variant='outline' onClick={() => onOpenChange(false)}>
