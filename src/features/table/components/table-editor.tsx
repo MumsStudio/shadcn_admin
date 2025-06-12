@@ -191,7 +191,6 @@ export function TableEditor() {
     })
 
     setUniverAPI(univerAPI)
-
     if (workbookData) {
       univerAPI.createWorkbook(workbookData)
       const commandService = univer.__getInjector().get(ICommandService)

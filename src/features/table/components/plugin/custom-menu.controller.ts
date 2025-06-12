@@ -23,6 +23,7 @@ export class CustomMenuController extends Disposable {
   private _initCommands(): void {
     [
       InsertVideoUICommand,
+      InsertVideoCommand
     ].forEach((c) => {
       this.disposeWithMe(this._commandService.registerCommand(c));
     });

@@ -1,5 +1,5 @@
 import type { ISetRangeValuesMutationParams } from '@univerjs/sheets';
-import { IAccessor, ICommandService, IMutationInfo, IUndoRedoService, IUniverInstanceService, sequenceExecute, UniverInstanceType, Workbook } from '@univerjs/core';
+import { CommandType, IAccessor, ICommand, ICommandService, IMutationInfo, IUndoRedoService, IUniverInstanceService, sequenceExecute, UniverInstanceType, Workbook } from '@univerjs/core';
 import { SetRangeValuesMutation, SetRangeValuesUndoMutationFactory } from '@univerjs/sheets';
 import { MenuItemType } from '@univerjs/ui';
 
@@ -15,11 +15,12 @@ interface IInsertVideoParams {
 }
 
 // 视频插入命令
-export const InsertVideoCommand = {
+export const InsertVideoCommand: ICommand = {
   id: 'sheet.command.insert-video',
+  type: CommandType.COMMAND,
   handler: (accessor: IAccessor, params: IInsertVideoParams) => {
     const { unitId, subUnitId, row, column, videoUrl, width = 300, height = 200 } = params;
-
+    // const univerAPI = accessor.get('univerAPI');
     const univerInstanceService = accessor.get(IUniverInstanceService);
     const commandService = accessor.get(ICommandService);
     const undoRedoService = accessor.get(IUndoRedoService);
@@ -38,7 +39,7 @@ export const InsertVideoCommand = {
     const videoData = {
       [row]: {
         [column]: {
-          v: null, // 基础值设为空，避免冲突
+          v: '',
           custom: {
             type: 'video',
             videoUrl,
@@ -88,11 +89,10 @@ export const InsertVideoCommand = {
 };
 
 // 视频插入UI命令
-export const InsertVideoUICommand = {
+export const InsertVideoUICommand: ICommand = {
   id: 'sheet.command.insert-video-ui',
-  type: MenuItemType.BUTTON,
-  handler: (accessor: IAccessor) => {
-    // 这里可以添加UI逻辑，例如打开文件选择器或URL输入对话框
+  type: CommandType.OPERATION,
+  handler: (accessor: IAccessor) => {    // 这里可以添加UI逻辑，例如打开文件选择器或URL输入对话框
 
     // 模拟用户选择了视频
     const videoUrl = 'https://example.com/video.mp4';

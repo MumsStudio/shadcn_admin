@@ -431,9 +431,11 @@ li.heading-3 {
 .modal-section {
   /* margin: 16px 0 !important; */
 }
-.notselected{
-  cursor: not-allowed!important;
+
+.notselected {
+  cursor: not-allowed !important;
 }
+
 .add-member-btn {
   border-radius: 50% !important;
   width: 40px !important;
@@ -612,4 +614,64 @@ li.heading-3 {
 
 .modal-submit-button:hover {
   background-color: #0065ff !important;
+}
+
+
+#container {
+  display: flex;
+  border: 1px solid #dfe3e8;
+}
+
+#stencil {
+  width: 180px;
+  height: 100%;
+  position: relative;
+  border-right: 1px solid #dfe3e8;
+}
+
+/* #graph-container {
+  width: calc(100% - 180px);
+  height: 100%;
+} */
+
+.x6-widget-stencil {
+  background-color: #fff;
+}
+
+.x6-widget-stencil-title {
+  background-color: #fff;
+}
+
+.x6-widget-stencil-group-title {
+  background-color: #fff !important;
+}
+
+.x6-widget-transform {
+  margin: -1px 0 0 -1px;
+  padding: 0px;
+  border: 1px solid #239edd;
+}
+
+.x6-widget-transform>div {
+  border: 1px solid #239edd;
+}
+
+.x6-widget-transform>div:hover {
+  background-color: #3dafe4;
+}
+
+.x6-widget-transform-active-handle {
+  background-color: #3dafe4;
+}
+
+.x6-widget-transform-resize {
+  border-radius: 0;
+}
+
+.x6-widget-selection-inner {
+  border: 1px solid #239edd;
+}
+
+.x6-widget-selection-box {
+  opacity: 0;
 }

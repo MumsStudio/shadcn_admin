@@ -464,6 +464,40 @@ export function LeftSelect({
         document.body.appendChild(cardMenu)
       },
     },
+    {
+      icon: <IconBraille className='mx-2 h-4 w-4' />,
+      title: '插入流程图',
+      action: () => {
+        editor?.commands.insertFlowchart({
+          data: {
+            nodes: [
+              {
+                id: '1',
+                shape: 'rect',
+                x: 100,
+                y: 100,
+                width: 80,
+                height: 40,
+                label: '开始',
+                attrs: {
+                  body: {
+                    fill: '#31d0c6',
+                    stroke: '#000',
+                    strokeWidth: 1,
+                  },
+                  label: {
+                    fill: '#fff',
+                  },
+                },
+              },
+            ],
+            edges: [],
+          },
+          width: '500px',
+          height: '300px',
+        })
+      },
+    },
   ]
   return (
     <div
