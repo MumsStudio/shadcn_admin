@@ -2,9 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { IconDeviceFloppy, IconHistory } from '@tabler/icons-react'
 import { Route } from '@/routes/table/detail.$id'
 import { ICommandService } from '@univerjs/core'
-import { UniverDocsDrawingPlugin } from '@univerjs/docs-drawing'
-import { UniverDrawingPlugin } from '@univerjs/drawing'
-import { UniverDrawingUIPlugin } from '@univerjs/drawing-ui'
 import DrawingUIZhCN from '@univerjs/drawing-ui/locale/zh-CN'
 import {
   createUniver,
@@ -48,8 +45,6 @@ import { UniverSheetsCrosshairHighlightPlugin } from '@univerjs/sheets-crosshair
 import '@univerjs/sheets-crosshair-highlight/facade'
 import '@univerjs/sheets-crosshair-highlight/lib/index.css'
 import SheetsCrosshairHighlightZhCN from '@univerjs/sheets-crosshair-highlight/locale/zh-CN'
-import { UniverSheetsDrawingPlugin } from '@univerjs/sheets-drawing'
-import { UniverSheetsDrawingUIPlugin } from '@univerjs/sheets-drawing-ui'
 import SheetsDrawingUIZhCN from '@univerjs/sheets-drawing-ui/locale/zh-CN'
 import '@univerjs/watermark/facade'
 import { formatLastEditedTime } from '@/utils/common'
@@ -148,6 +143,38 @@ export function TableEditor() {
     }, 3000)
   }
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Home') {
+        e.preventDefault()
+        const fWorkbook = univerAPI.getActiveWorkbook()
+        const fWorksheet = fWorkbook?.getActiveSheet()
+        if (fWorksheet) {
+          let selection = fWorksheet.getSelection()
+          const cell = selection?.getCurrentCell()
+          const actualRow = cell?.actualRow
+          const targetRange = fWorksheet.getRange(
+            `A${(actualRow as number) + 1}`
+          )
+          selection?.updatePrimaryCell(targetRange)
+          
+        }
+      }
+      if (e.ctrlKey && e.key === 'Home') {
+        e.preventDefault()
+        const fWorkbook = univerAPI.getActiveWorkbook()
+        const fWorksheet = fWorkbook?.getActiveSheet()
+        if (fWorksheet) {
+          let selection = fWorksheet.getSelection()
+          const cell = selection?.getCurrentCell()
+          const targetRange = fWorksheet.getRange(`A1`)
+          
+          selection?.updatePrimaryCell(targetRange)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
     if (!containerRef.current) return
 
     const { univerAPI, univer } = createUniver({
@@ -207,7 +234,12 @@ export function TableEditor() {
     // 设置标记
 
     setUniverAPI(univerAPI)
-
+    univerAPI.registerComponent('myFloatDom', ({ data }: any) => (
+      <div style={{ width: '100px', height: '200px', background: '#fff' }}>
+        popup content
+        {data?.label}
+      </div>
+    ))
     if (workbookData) {
       univerAPI.createWorkbook(workbookData)
       const commandService = univer.__getInjector().get(ICommandService)
@@ -217,8 +249,36 @@ export function TableEditor() {
         }
       })
 
+      // // 延迟添加浮动DOM
+      // setTimeout(() => {
+      //   const fWorkbook = univerAPI.getActiveWorkbook()
+      //   const fWorksheet = fWorkbook?.getActiveSheet()
+
+      //   if (fWorksheet) {
+      //     try {
+      //       const disposeable = fWorksheet.addFloatDomToPosition({
+      //         componentKey: 'myFloatDom',
+      //         initPosition: {
+      //           startX: 10,
+      //           endX: 110,
+      //           startY: 10,
+      //           endY: 110,
+      //         },
+      //         data: {
+      //           label: '测试浮动DOM',
+      //         },
+      //       })
+
+      //       if (!disposeable) {
+      //         console.error('添加浮动DOM失败')
+      //       }
+      //     } catch (error) {
+      //       console.error('添加浮动DOM时出错:', error)
+      //     }
+      //   }
+      // }, 500)
       return () => {
-        // disposeable?.dispose()
+        window.removeEventListener('keydown', handleKeyDown)
         dispose.dispose()
         if (saveTimeoutRef.current) {
           clearTimeout(saveTimeoutRef.current)

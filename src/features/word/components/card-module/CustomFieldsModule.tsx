@@ -65,13 +65,10 @@ const CustomFieldsModule: React.FC<CustomFieldsModuleProps> = ({
       name: newField.name.trim(),
       type: newField.type || 'text',
       options: newField.type === 'dropdown' ? newField.options : undefined,
-      // defaultValue: undefined,
       value: newField.type === 'checkbox' ? false : undefined,
     }
 
     const updatedFields = [...fields, field]
-    // setFields(updatedFields)
-    // console.log('addField', field)
     onChange(updatedFields, `addField:${field.name}`)
     setIsAddingField(false)
     setNewField({ type: 'text' })

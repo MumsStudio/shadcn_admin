@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { IconCircleX } from '@tabler/icons-react';
-import { useReactFlow, NodeProps, Handle, Position } from '@xyflow/react';
-import { createPortal } from 'react-dom';
-import CardEditor from '@/features/word/components/CardEditor';
-import ListBoxContent from '../../word/components/ListBoxContent';
-import ListBoxFooter from '../../word/components/ListBoxFooter';
-import { Card as CardType } from '../../word/components/types';
-
+import React, { useState, useEffect, useRef } from 'react'
+import { IconCircleX } from '@tabler/icons-react'
+import { useReactFlow, NodeProps, Handle, Position } from '@xyflow/react'
+import { createPortal } from 'react-dom'
+import CardEditor from '@/features/word/components/card-components/CardEditor'
+import ListBoxContent from '../../word/components/card-components/ListBoxContent'
+import ListBoxFooter from '../../word/components/card-components/ListBoxFooter'
+import { Card as CardType } from '../../word/components/types'
 
 interface CardNodeData {
   label?: string
@@ -62,7 +61,6 @@ const CardNode: React.FC<CardNodeProps> = ({ data, selected, id }) => {
   useEffect(() => {
     updateNodeData({ cards })
   }, [cards])
-
 
   const handleCloseModal = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -141,7 +139,6 @@ const CardNode: React.FC<CardNodeProps> = ({ data, selected, id }) => {
               {name}
             </h3>
           )}
-
         </div>
 
         {/* ListBox 功能区域 */}

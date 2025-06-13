@@ -48,8 +48,32 @@ export const addDefaultShapes = (graph: Graph, stencil: Stencil) => {
     shape: 'custom-circle',
     label: '连接',
   })
+  const r7 = graph.createNode({
+    shape: 'ellipse',
+    label: 'ellipse',
+  })
+  const r8 = graph.createNode({
+    shape: 'path',
+    label: 'path',
+  })
+  const r9 = graph.createNode({
+    shape: 'like',
+    label: 'like',
+  })
+  const r10 = graph.createNode({
+    shape: 'star',
+    label: 'star',
+  })
+  const r11 = graph.createNode({
+    shape: 'music',
+    label: 'music',
+  })
+  // const r12 = graph.createNode({
+  //   shape: 'switch',
+  //   label: 'switch',
+  // })
   stencil.load([r1, r2, r3, r4, r5, r6], 'group1')
-
+  stencil.load([r7, r8, r9, r10, r11], 'group3')
   const imageShapes = [
     {
       label: 'Client',

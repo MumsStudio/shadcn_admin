@@ -13,14 +13,14 @@ import {
 } from '@tabler/icons-react'
 import { useAuthStore } from '@/stores/authStore'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import Request from '../request'
-import AttachmentsModule from './AttachmentsModule'
-import ChecklistModule from './ChecklistModule'
-import CustomFieldsModule from './CustomFieldsModule'
-import DatesModule from './DatesModule'
-import LabelsModule from './LabelsModule'
-import MembersModule from './MembersModule'
-import { Card, ModuleConfig } from './types'
+import Request from '../../request'
+import AttachmentsModule from '../card-module/AttachmentsModule'
+import ChecklistModule from '../card-module/ChecklistModule'
+import CustomFieldsModule from '../card-module/CustomFieldsModule'
+import DatesModule from '../card-module/DatesModule'
+import LabelsModule from '../card-module/LabelsModule'
+import MembersModule from '../card-module/MembersModule'
+import { Card, ModuleConfig } from '../types'
 
 interface CardEditorProps {
   currentClickCard: Card | null
@@ -145,7 +145,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
     {
       id: 'members',
       name: '成员',
-      icon: <IconUser size={buttonIconsize}/>,
+      icon: <IconUser size={buttonIconsize} />,
       component: (props) => (
         <MembersModule
           {...props}
@@ -213,7 +213,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
           onChange={(data, action) => {
             handleModuleChange('attachments', data, action)
           }}
-          user = {user}
+          user={user}
         />
       ),
       allowMultiple: true,
@@ -278,7 +278,10 @@ const CardEditor: React.FC<CardEditorProps> = ({
               </div>
             )}
             <button
-              onClick={handleModalClose}
+              onClick={(e) => {
+                handleModalClose(e)
+                e.stopPropagation()
+              }}
               className='rounded px-2 py-1 text-gray-100'
             >
               <IconCircleX className='h-6 w-6 text-gray-300' />
@@ -288,7 +291,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
 
         <div className='modal-content flex'>
           <div className='mr-1 w-[65%] overflow-y-auto !px-[10px] !py-4'>
-            <div className='flex flex-wrap items-center gap-3 mb-4'>
+            <div className='mb-4 flex flex-wrap items-center gap-3'>
               {availableModules.map((module) => (
                 <button
                   key={module.id}
@@ -307,7 +310,7 @@ const CardEditor: React.FC<CardEditorProps> = ({
                 </div>
                 <div>描述</div>
               </div>
-             
+
               {isEditingDescrip ? (
                 <input
                   className='description-content border-none bg-white'
@@ -338,7 +341,14 @@ const CardEditor: React.FC<CardEditorProps> = ({
                   }}
                   autoFocus
                 />
-              ):( <div className='py-1 pl-2 text-[.875rem] text-gray-400' onClick={() => setIsEditingDescrip(true)}>{description ||'添加详细描述...'}</div>)}
+              ) : (
+                <div
+                  className='py-1 pl-2 text-[.875rem] text-gray-400'
+                  onClick={() => setIsEditingDescrip(true)}
+                >
+                  {description || '添加详细描述...'}
+                </div>
+              )}
             </div>
 
             {activeModules.map((moduleId, index) => {

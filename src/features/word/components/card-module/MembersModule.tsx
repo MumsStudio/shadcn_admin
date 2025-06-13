@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import Request from '../request'
+import Request from '../../request'
 
 interface MembersModuleProps {
   onChange: (data: any, action: string) => void

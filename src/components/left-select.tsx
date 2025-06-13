@@ -444,16 +444,18 @@ export function LeftSelect({
         const cardMenu = document.createElement('div')
         cardMenu.className = 'absolute z-50 bg-white p-2 rounded shadow-lg'
 
-        import('@/features/word/components/CardCommand').then(({ ListBox }) => {
-          const root = ReactDOM.createRoot(cardMenu)
-          root.render(
-            <CardDrawer
-              onInsert={(title) => handleInsertCard(title)}
-              onClose={() => document.body.removeChild(cardMenu)}
-              compact={true}
-            />
-          )
-        })
+        import('@/features/word/components/custom-command/CardCommand').then(
+          ({ ListBox }) => {
+            const root = ReactDOM.createRoot(cardMenu)
+            root.render(
+              <CardDrawer
+                onInsert={(title) => handleInsertCard(title)}
+                onClose={() => document.body.removeChild(cardMenu)}
+                compact={true}
+              />
+            )
+          }
+        )
 
         const rect = dropdownRef.current?.getBoundingClientRect()
         if (rect) {

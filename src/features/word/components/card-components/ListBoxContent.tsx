@@ -10,7 +10,7 @@ import {
 } from '@tabler/icons-react'
 import { index } from 'mathjs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Card } from './types'
+import { Card } from '../types'
 
 interface ListBoxContentProps {
   cards: Card[]
@@ -77,12 +77,15 @@ const ListBoxContent: React.FC<ListBoxContentProps> = ({
                           <div className='labels flex gap-1'>
                             {card.modules?.labels &&
                             card.modules?.labels.length > 0
-                              ? card.modules?.labels.map((label: any) => (
-                                  <div
-                                    className='rounded px-2 py-1 text-white'
-                                    style={{ backgroundColor: label.color }}
-                                  ></div>
-                                ))
+                              ? card.modules?.labels.map(
+                                  (label: any, index: any) => (
+                                    <div
+                                      key={index}
+                                      className='rounded px-2 py-1 text-white'
+                                      style={{ backgroundColor: label.color }}
+                                    ></div>
+                                  )
+                                )
                               : ''}
                           </div>
                         )}

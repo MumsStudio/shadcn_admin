@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom/client'
 import { Shape } from '@antv/x6'
 import { Node, mergeAttributes } from '@tiptap/core'
-import { FlowchartComponent } from './FlowchartComponent'
+import { FlowchartComponent } from '../flow-components/FlowchartComponent'
 
 export interface FlowchartOptions {
   HTMLAttributes: Record<string, any>
@@ -73,7 +73,7 @@ export const Flowchart = Node.create<FlowchartOptions>({
               zIndex: 0,
             })
           },
-          validateConnection({ targetMagnet }) {
+          validateConnection({ targetMagnet }: any) {
             return !!targetMagnet
           },
         },

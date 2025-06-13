@@ -1,4 +1,5 @@
-import { Graph } from '@antv/x6'
+import { Graph } from '@antv/x6';
+
 
 export const setupPortVisibility = (graph: Graph) => {
   const showPorts = (ports: NodeListOf<SVGElement>, show: boolean) => {
@@ -20,4 +21,5 @@ export const setupPortVisibility = (graph: Graph) => {
     ) as NodeListOf<SVGElement>
     showPorts(ports, false)
   })
+
 }

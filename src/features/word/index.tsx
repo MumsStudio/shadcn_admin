@@ -1,39 +1,74 @@
-import { useState, useEffect, useCallback } from 'react';
-import { IconAlignLeft, IconAlignCenter, IconAlignRight, IconAlignJustified, IconTextSize, IconH1, IconH2, IconH3, IconItalic, IconBackground, IconBold, IconStrikethrough, IconUnderline, IconList, IconListNumbers, IconTypography, IconHorse, IconStar, IconShare, IconMenu, IconUser, IconHistory, IconEye, IconComet, IconPaperclip, IconTrash, IconIndentIncrease, IconIndentDecrease, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from '@tabler/icons-react';
-import { Route } from '@/routes/word/detail.$id';
-import { Color } from '@tiptap/extension-color';
-import { FontFamily } from '@tiptap/extension-font-family';
-import FontSize from '@tiptap/extension-font-size';
-import Heading from '@tiptap/extension-heading';
-import Highlight from '@tiptap/extension-highlight';
-import Image from '@tiptap/extension-image';
-import Table from '@tiptap/extension-table';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
-import TableRow from '@tiptap/extension-table-row';
-import TaskItem from '@tiptap/extension-task-item';
-import TaskList from '@tiptap/extension-task-list';
-import TextAlign from '@tiptap/extension-text-align';
-import TextStyle from '@tiptap/extension-text-style';
-import Underline from '@tiptap/extension-underline';
-import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import { Indent } from '@weiruo/tiptap-extension-indent';
-import { Markdown } from 'tiptap-markdown';
-import { formatLastEditedTime } from '@/utils/common';
-import debounce from '@/utils/debounce';
-import { Main } from '@/components/layout/main';
-import { LeftSelect } from '@/components/left-select';
-import { LinkPopup } from '@/components/link-popup';
-import { SimpleSelect } from '@/components/simple-select';
-import { ListBox } from './components/CardCommand';
-import { HistoryPanel } from './components/HistoryPanel';
-import { Link } from './components/LinkCommand';
-import { Board } from './components/board';
-import { Flowchart } from './components/flow-chart';
-import { Video } from './components/video';
-import Request from './request';
-
+import { useState, useEffect, useCallback } from 'react'
+import {
+  IconAlignLeft,
+  IconAlignCenter,
+  IconAlignRight,
+  IconAlignJustified,
+  IconTextSize,
+  IconH1,
+  IconH2,
+  IconH3,
+  IconItalic,
+  IconBackground,
+  IconBold,
+  IconStrikethrough,
+  IconUnderline,
+  IconList,
+  IconListNumbers,
+  IconTypography,
+  IconHorse,
+  IconStar,
+  IconShare,
+  IconMenu,
+  IconUser,
+  IconHistory,
+  IconEye,
+  IconComet,
+  IconPaperclip,
+  IconTrash,
+  IconIndentIncrease,
+  IconIndentDecrease,
+  IconLayoutSidebarRightCollapse,
+  IconLayoutSidebarRightExpand,
+} from '@tabler/icons-react'
+import { Route } from '@/routes/word/detail.$id'
+import { Color } from '@tiptap/extension-color'
+import { FontFamily } from '@tiptap/extension-font-family'
+import FontSize from '@tiptap/extension-font-size'
+import Heading from '@tiptap/extension-heading'
+import Highlight from '@tiptap/extension-highlight'
+import Image from '@tiptap/extension-image'
+import Table from '@tiptap/extension-table'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import TableRow from '@tiptap/extension-table-row'
+import TaskItem from '@tiptap/extension-task-item'
+import TaskList from '@tiptap/extension-task-list'
+import TextAlign from '@tiptap/extension-text-align'
+import TextStyle from '@tiptap/extension-text-style'
+import Underline from '@tiptap/extension-underline'
+import {
+  useEditor,
+  EditorContent,
+  BubbleMenu,
+  FloatingMenu,
+} from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import { Indent } from '@weiruo/tiptap-extension-indent'
+import { Markdown } from 'tiptap-markdown'
+import { formatLastEditedTime } from '@/utils/common'
+import debounce from '@/utils/debounce'
+import { Main } from '@/components/layout/main'
+import { LeftSelect } from '@/components/left-select'
+import { LinkPopup } from '@/components/link-popup'
+import { SimpleSelect } from '@/components/simple-select'
+import { HistoryPanel } from './components/HistoryPanel'
+import { Board } from './components/custom-command/board'
+import { ListBox } from './components/custom-command/CardCommand'
+import { Link } from './components/custom-command/LinkCommand'
+import { Flowchart } from './components/custom-command/flow-chart'
+import { Video } from './components/custom-command/video'
+import Request from './request'
 
 export default function Word() {
   const { id } = Route.useParams()
@@ -58,14 +93,12 @@ export default function Word() {
       content,
       // ...parsedCards,
     }
-    Request._UpdateDocumentDetail(id, { content }).then(
-      (res: any) => {
-        if (res) {
-          console.log(res, 'res')
-          setLastSaved('刚刚')
-        }
+    Request._UpdateDocumentDetail(id, { content }).then((res: any) => {
+      if (res) {
+        console.log(res, 'res')
+        setLastSaved('刚刚')
       }
-    )
+    })
   }
 
   useEffect(() => {
@@ -89,7 +122,6 @@ export default function Word() {
     const debouncedSaveDocument = debounce(saveDocument, 800)
     debouncedSaveDocument()
   }, [content, cards])
-
 
   const editor: any = useEditor({
     extensions: [

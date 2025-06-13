@@ -1,11 +1,14 @@
-import React from 'react'
+import React from 'react';
+
 
 interface CustomContextMenuProps {
-  currentNode: any
+  currentShape: any
+  onChange: (shape: string, attr: any) => void
 }
 
 export const CustomContextMenu: React.FC<CustomContextMenuProps> = ({
-  currentNode,
+  currentShape,
+  onChange,
 }) => {
   const menuItems = [
     {
@@ -29,7 +32,11 @@ export const CustomContextMenu: React.FC<CustomContextMenuProps> = ({
       label: '数据',
       attrs: { body: { refPoints: '10,0 40,0 30,20 0,20' } },
     },
-    { shape: 'custom-circle', label: '连接' },
+    { shape: 'ellipse', label: 'ellipse' },
+    { shape: 'path', label: 'path' },
+    { shape: 'like', label: 'like' },
+    { shape: 'star', label: 'star' },
+    { shape: 'music', label: 'music' },
   ]
 
   return (
@@ -39,14 +46,7 @@ export const CustomContextMenu: React.FC<CustomContextMenuProps> = ({
           key={item.label}
           className='menu-item'
           onClick={() => {
-            if (currentNode) {
-              currentNode.shape = item.shape
-              currentNode.setData({ shape: item.shape }, { overwrite: true })
-              if (item.attrs) {
-                currentNode.attr('body', item.attrs.body)
-              }
-            }
-            console.log(currentNode, currentNode.shape)
+            onChange(item.shape, item.attrs?.body)
           }}
         >
           {item.label}

@@ -19,10 +19,15 @@ const ListBoxHeader: React.FC<ListBoxHeaderProps> = ({
   const handleMenuClick = () => setMenuOpen(!isMenuOpen)
   const handleDeleteClick = () => {
     setMenuOpen(false)
-    if (typeof getPos === 'function') {
+    const pos = getPos()
+    if (
+      typeof getPos === 'function' &&
+      pos >= 0 &&
+      pos < editor.state.doc.content.size
+    ) {
       editor.commands.deleteRange({
-        from: getPos(),
-        to: getPos() + editor.state.doc.nodeSize,
+        from: pos,
+        to: (pos + editor.state.doc.nodeSize) - 2,
       })
     }
   }

@@ -3,11 +3,11 @@ import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { mergeAttributes, Node } from '@tiptap/core'
 import { createPortal } from 'react-dom'
-import CardEditor from './CardEditor'
-import ListBoxContent from './ListBoxContent'
-import ListBoxFooter from './ListBoxFooter'
-import ListBoxHeader from './ListBoxHeader'
-import { Card } from './types'
+import CardEditor from '../card-components/CardEditor'
+import ListBoxContent from '../card-components/ListBoxContent'
+import ListBoxFooter from '../card-components/ListBoxFooter'
+import ListBoxHeader from '../card-components/ListBoxHeader'
+import { Card } from '../types'
 
 export interface ListBoxOptions {
   HTMLAttributes: Record<string, any>
@@ -27,8 +27,8 @@ declare module '@tiptap/core' {
 export const ListBox = Node.create<ListBoxOptions>({
   name: 'listBox',
   group: 'block',
-  atom: false,
-  draggable: true,
+  atom: true,
+  draggable: false,
   content: 'block*',
 
   addOptions() {
@@ -214,9 +214,9 @@ export const ListBox = Node.create<ListBoxOptions>({
 
       return {
         dom: container,
-        destroy: () => {
-          root.unmount()
-        },
+        // destroy: () => {
+        //   root.unmount()
+        // },
       }
     }
   },
