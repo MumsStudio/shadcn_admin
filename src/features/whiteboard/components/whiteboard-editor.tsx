@@ -1,27 +1,89 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { IconPointer, IconRectangle, IconTextCaption, IconLink, IconZoomIn, IconZoomOut, IconZoomReset, IconLetterT, IconNote, IconVectorSpline, IconHandClick, IconCircle, IconPencil, IconArrowBackUp, IconArrowForwardUp, IconTrash, IconLock, IconBoxMultipleFilled, IconBoxMultiple, IconArrowUpRight, IconBackslash, IconTriangle, IconSquare, IconPhoto, IconVideo, IconTable, IconCopy, IconClipboard, IconCut, IconMath, IconSortDescendingShapes, IconRepeat, IconProgress, IconPlayerPlay, IconHistory, IconShare, IconDeviceFloppy, IconArrowUpFromArc, IconPolygon, IconCards } from '@tabler/icons-react';
-import { Route } from '@/routes/whiteboard/detail.$id';
-import { ReactFlow, Controls, Background, Panel, useReactFlow, useNodesState, useEdgesState, Connection, ReactFlowProvider, addEdge, BackgroundVariant, Node, Edge, NodeTypes, NodeProps, ConnectionMode, MarkerType, useViewport, Handle, Position, ConnectionLineType } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import { showSuccessData } from '@/utils/show-submitted-data';
-import Request from '../request';
-import { HistoryPanel } from './HistoryPanel';
-import ArrowNode from './arrow-node';
-import CardNode from './card-node';
-import CircleNode from './circle-node';
-import ExpandableRectangleNode from './expandable-rectangle-node';
-import FlowNode from './flow-node';
-import FormulaNode from './formula-node';
-import ImageNode from './image-node';
-import LineNode from './line-node';
-import PolygonNode from './ploygon-node';
-import RectangleNode from './rectangle-node';
-import StickyNode from './sticky-node';
-import TableNode from './table-node';
-import TextNode from './text-node';
-import TriangleNode from './triangle-node';
-import VideoNode from './video-node';
-
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import {
+  IconPointer,
+  IconRectangle,
+  IconTextCaption,
+  IconLink,
+  IconZoomIn,
+  IconZoomOut,
+  IconZoomReset,
+  IconLetterT,
+  IconNote,
+  IconVectorSpline,
+  IconHandClick,
+  IconCircle,
+  IconPencil,
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconTrash,
+  IconLock,
+  IconBoxMultipleFilled,
+  IconBoxMultiple,
+  IconArrowUpRight,
+  IconBackslash,
+  IconTriangle,
+  IconSquare,
+  IconPhoto,
+  IconVideo,
+  IconTable,
+  IconCopy,
+  IconClipboard,
+  IconCut,
+  IconMath,
+  IconSortDescendingShapes,
+  IconRepeat,
+  IconProgress,
+  IconPlayerPlay,
+  IconHistory,
+  IconShare,
+  IconDeviceFloppy,
+  IconArrowUpFromArc,
+  IconPolygon,
+  IconCards,
+} from '@tabler/icons-react'
+import { Route } from '@/routes/whiteboard/detail.$id'
+import {
+  ReactFlow,
+  Controls,
+  Background,
+  Panel,
+  useReactFlow,
+  useNodesState,
+  useEdgesState,
+  Connection,
+  ReactFlowProvider,
+  addEdge,
+  BackgroundVariant,
+  Node,
+  Edge,
+  NodeTypes,
+  NodeProps,
+  ConnectionMode,
+  MarkerType,
+  useViewport,
+  Handle,
+  Position,
+  ConnectionLineType,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
+import { showSuccessData } from '@/utils/show-submitted-data'
+import Request from '../request'
+import { HistoryPanel } from './HistoryPanel'
+import ArrowNode from './arrow-node'
+import CardNode from './card-node'
+import CircleNode from './circle-node'
+import ExpandableRectangleNode from './expandable-rectangle-node'
+import FlowNode from './flow-node'
+import FormulaNode from './formula-node'
+import ImageNode from './image-node'
+import LineNode from './line-node'
+import PolygonNode from './ploygon-node'
+import RectangleNode from './rectangle-node'
+import StickyNode from './sticky-node'
+import TableNode from './table-node'
+import TextNode from './text-node'
+import TriangleNode from './triangle-node'
+import VideoNode from './video-node'
 
 // 定义类型
 type WhiteboardNodeData = {
@@ -119,6 +181,7 @@ function WhiteboardFlow() {
     useNodesState<WhiteboardNode>(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState<WhiteboardEdge>([])
   const [copiedNodes, setCopiedNodes] = useState<WhiteboardNode[]>([])
+  const [ghostNodeId, setGhostNodeId] = useState<string | null>(null)
 
   const [whiteboardName, setWhiteboardName] = useState('未命名白板')
   const [showHistoryPanel, setShowHistoryPanel] = useState(false)
@@ -404,6 +467,7 @@ function WhiteboardFlow() {
   // 处理连接
   const onConnect = useCallback(
     (params: Connection) => {
+      console.log('onConnect', params)
       const newEdge = {
         ...params,
         id: `${params.source}-${params.sourceHandle || 'source'}-${params.target}-${params.targetHandle || 'target'}-${Date.now()}`,
@@ -419,6 +483,68 @@ function WhiteboardFlow() {
     },
     [setEdges]
   )
+
+  // 处理节点悬停显示虚影
+  const onNodeMouseEnter = useCallback(
+    ({}) => {
+      const selectedNode = nodes.find((node) => node.selected)
+      const selectedEdge = edges.find((edge) => edge.selected)
+      if (ghostNodeId) {
+        setNodes((nds) => nds.filter((n) => n.id !== ghostNodeId))
+      }
+      console.log('onNodeMouseEnter', selectedEdge)
+      if (!selectedNode) return
+      const ghostNode: WhiteboardNode = {
+        id: `ghost-${Date.now()}`,
+        type: selectedNode.type,
+        position: {
+          x: selectedNode.position.x + 150,
+          y: selectedNode.position.y,
+        },
+        data: {
+          ...selectedNode.data,
+          fill: 'rgba(95, 149, 255, 0.2)',
+          borderColor: '#5F95FF',
+        },
+        style: {
+          opacity: 0.5,
+        },
+      }
+
+      setNodes((nds) => [...nds, ghostNode])
+      setGhostNodeId(ghostNode.id)
+    },
+    [ghostNodeId, setNodes, nodes, edges]
+  )
+
+  // 处理节点离开移除虚影
+  const onNodeMouseLeave = useCallback(() => {
+    if (ghostNodeId) {
+      setNodes((nds) => nds.filter((n) => n.id !== ghostNodeId))
+      setGhostNodeId(null)
+    }
+  }, [ghostNodeId, setNodes])
+
+  // 处理节点点击创建相同图形
+  const onNodeClick = useCallback(() => {
+    const selectedNode = nodes.find((node) => node.selected)
+    if (ghostNodeId) {
+      setNodes((nds) => nds.filter((n) => n.id !== ghostNodeId))
+      setGhostNodeId(null)
+    }
+    if (!selectedNode) return
+    const newNode: WhiteboardNode = {
+      id: `${Date.now()}`,
+      type: selectedNode.type,
+      position: {
+        x: selectedNode.position.x + 150,
+        y: selectedNode.position.y,
+      },
+      data: selectedNode.data,
+    }
+
+    setNodes((nds) => [...nds, newNode])
+  }, [ghostNodeId, setNodes, nodes])
 
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
@@ -666,7 +792,7 @@ function WhiteboardFlow() {
       { id: 'table', title: '表格', icon: <IconTable /> },
       { id: 'formula', title: '公式', icon: <IconMath /> },
       { id: 'flow', title: '流程图', icon: <IconArrowUpFromArc /> },
-      { id: 'cardcard', title: '卡片', icon: <IconCards /> },
+      { id: 'card', title: '卡片', icon: <IconCards /> },
       // { id: 'end', title: '结束', icon: <IconSortDescendingShapes /> },
       // { id: 'process', title: '处理', icon: <IconProgress /> },
       // { id: 'decision', title: '判断', icon: <IconRepeat /> },
@@ -805,7 +931,7 @@ function WhiteboardFlow() {
         fitView
         onEdgeClick={onEdgeClick}
         minZoom={0.1}
-        maxZoom={2}
+        maxZoom={1}
         connectionMode={
           selectedTool === 'connection' ? ConnectionMode.Strict : undefined
         }
@@ -827,9 +953,12 @@ function WhiteboardFlow() {
         connectionLineType={ConnectionLineType.SimpleBezier}
         snapToGrid={true}
         snapGrid={[15, 15]}
-        onMouseDown={onPaneMouseDown} // ✅ 修改此处
-        onMouseMove={onPaneMouseMove} // ✅ 修改此处
+        onMouseDown={onPaneMouseDown}
+        onMouseMove={onPaneMouseMove}
         onMouseUp={onPaneMouseUp}
+        onConnectEnd={onNodeMouseEnter as any}
+        onNodeMouseLeave={onNodeMouseLeave}
+        // onNodeClick={onNodeClick as any}
       >
         {/* 顶部导航栏 */}
         <Panel position='top-center' className='bg-white p-2 shadow-md'>

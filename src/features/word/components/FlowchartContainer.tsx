@@ -1,4 +1,8 @@
 import React from 'react'
+import {
+  IconLayoutSidebarRightCollapse,
+  IconLayoutSidebarRightExpand,
+} from '@tabler/icons-react'
 
 interface FlowchartContainerProps {
   width: string
@@ -6,9 +10,8 @@ interface FlowchartContainerProps {
   showStencil: boolean
   stencilWidth: string
   toggleStencil: () => void
-  toggleFullscreen: () => void
   containerRef: React.RefObject<HTMLDivElement> | null
-  stencilContainerRef: React.RefObject<HTMLDivElement>
+  stencilContainerRef: React.RefObject<HTMLDivElement> | null
   graphContainerRef: React.RefObject<HTMLDivElement>
 }
 
@@ -25,6 +28,7 @@ export const FlowchartContainer: React.FC<FlowchartContainerProps> = ({
   return (
     <div
       ref={containerRef}
+      id='flowchart-container'
       className='flowchart-container'
       style={{
         width,
@@ -68,7 +72,11 @@ export const FlowchartContainer: React.FC<FlowchartContainerProps> = ({
           cursor: 'pointer',
         }}
       >
-        {showStencil ? 'Hide Stencil' : 'Show Stencil'}
+        {showStencil ? (
+          <IconLayoutSidebarRightExpand />
+        ) : (
+          <IconLayoutSidebarRightCollapse />
+        )}
       </button>
     </div>
   )

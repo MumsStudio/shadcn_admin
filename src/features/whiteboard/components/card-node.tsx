@@ -1,181 +1,186 @@
-import React, { useState, useEffect } from 'react'
-import {
-  IconCalendarWeekFilled,
-  IconCheckbox,
-  IconCircleX,
-  IconMenuDeep,
-  IconMessage,
-  IconPaperclip,
-  IconSquareRoundedPlus2,
-  IconTag,
-  IconUser,
-} from '@tabler/icons-react'
-import { useAuthStore } from '@/stores/authStore'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import ChecklistModule from '@/features/word/components/ChecklistModule'
-import CustomFieldsModule from '@/features/word/components/CustomFieldsModule'
-import DatesModule from '@/features/word/components/DatesModule'
-import LabelsModule from '@/features/word/components/LabelsModule'
-import MembersModule from '@/features/word/components/MembersModule'
-import { ModuleConfig } from '../../word/components/types'
-import { Card as CardType } from '../../word/components/types'
-import Request from '../request'
+import React, { useState, useEffect, useRef } from 'react';
+import { IconCircleX } from '@tabler/icons-react';
+import { useReactFlow, NodeProps, Handle, Position } from '@xyflow/react';
+import { createPortal } from 'react-dom';
+import CardEditor from '@/features/word/components/CardEditor';
+import ListBoxContent from '../../word/components/ListBoxContent';
+import ListBoxFooter from '../../word/components/ListBoxFooter';
+import { Card as CardType } from '../../word/components/types';
 
-interface CardNodeProps {
-  data: {
-    label?: string
-    width?: number
-    height?: number
-    content?: string
-    locked?: boolean
-    modules?: any
-    cards?: CardType[]
-  }
+
+interface CardNodeData {
+  label?: string
+  width?: number
+  height?: number
+  content?: string
+  locked?: boolean
+  modules?: any
+  cards?: CardType[]
+  title?: string
+  data: any
+  id: string
+  type: string
+  position: any
   selected: boolean
-  isModalOpen?: boolean
-  handleModalClose?: (e: React.MouseEvent) => void
-  handleModalSubmit?: () => void
 }
 
-const CardNode: React.FC<CardNodeProps> = ({
-  data,
-  selected,
-  isModalOpen = false,
-  handleModalClose,
-  handleModalSubmit,
-}) => {
-  const [isModalOpenLocal, setIsModalOpenLocal] = useState(false)
+type CardNodeProps = NodeProps<CardNodeData>
 
-  const handleDoubleClick = () => {
-    setIsModalOpenLocal(true)
+const CardNode: React.FC<CardNodeProps> = ({ data, selected, id }) => {
+  const { setNodes } = useReactFlow()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [activeModules, setActiveModules] = useState<string[]>([])
+  const [cards, setCards] = useState<CardType[]>(data.cards || [])
+  const ModalRef = useRef<HTMLDivElement>(null)
+  const [currentClickCard, setCurrentClickCard] = useState<CardType | null>(
+    null
+  )
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [name, setName] = useState(
+    data.modules?.name || data.title || '卡片列表'
+  )
+
+  // 更新节点数据
+  const updateNodeData = (newData: Partial<CardNodeData>) => {
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              ...newData,
+            },
+          }
+        }
+        return node
+      })
+    )
   }
+
+  // 处理卡片更新
+  useEffect(() => {
+    updateNodeData({ cards })
+  }, [cards])
+
 
   const handleCloseModal = (e: React.MouseEvent) => {
     e.stopPropagation()
-    setIsModalOpenLocal(false)
-    if (handleModalClose) handleModalClose(e)
+    setIsModalOpen(false)
+    setCurrentClickCard(null)
+    setActiveModules([])
   }
-  const [currentCard, setCurrentCard] = useState<any | null>(null)
-  const [description, setDescription] = useState('')
-  const [name, setName] = useState('')
-  const [activeModules, setActiveModules] = useState<string[]>([])
-  const [isEditingName, setIsEditingName] = useState(false)
-  const [isEditingDescrip, setIsEditingDescrip] = useState(false)
+
+  const handleAddCardClick = () => {
+    const newCards = [
+      ...cards,
+      {
+        id: Date.now().toString(),
+        name: '',
+        content: '',
+        modules: {},
+        cardContent: {},
+        cardActions: [],
+      },
+    ]
+    setCards(newCards)
+    setIsModalOpen(true)
+  }
+
+  const handleCardClick = (cardId: string) => {
+    const card = cards.find((c) => c.id === cardId)
+    if (card) {
+      setCurrentClickCard(card)
+      setIsModalOpen(true)
+    }
+  }
+
+  useEffect(() => {
+    if (isModalOpen && ModalRef.current) {
+      ModalRef.current.focus()
+    }
+  }, [isModalOpen])
 
   useEffect(() => {
     if (data.modules) {
-      setCurrentCard({
-        id: 'node-card',
-        modules: data.modules,
-        cardContent: {},
-        cardActions: [],
-      })
       setName(data.modules.name || '')
-      setDescription(data.modules.description || '')
     }
-  }, [data.modules])
+    if (data.cards) {
+      setCards(data.cards)
+    }
+  }, [data.modules, data.cards])
 
   return (
-    <Card
-      className={`w-[${data.width || 300}px] p-4 ${selected ? 'ring-2 ring-blue-500' : ''}`}
-      onDoubleClick={handleDoubleClick}
-    >
-      <h3 className='text-lg font-medium'>{name}</h3>
-      <p className='text-gray-600'>{description}</p>
+    <>
+      <div
+        className={`list-box-container relative ${selected ? 'ring-2 ring-blue-500' : ''}`}
+        style={{
+          width: data.width ? `${data.width}px` : '150px',
+          height: data.height ? `${data.height}px` : '200px',
+        }}
+      >
+        {/* 标题和描述编辑区域 */}
+        <div className='p-4'>
+          {isEditingName ? (
+            <input
+              className='w-full border-b-2 border-blue-500 text-lg font-medium outline-none'
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => {
+                setIsEditingName(false)
+                updateNodeData({ title: name })
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+              autoFocus
+            />
+          ) : (
+            <h3
+              className='cursor-pointer text-lg font-medium hover:bg-gray-100'
+              onClick={() => setIsEditingName(true)}
+            >
+              {name}
+            </h3>
+          )}
 
-      <div className='mt-4 space-y-4'>
-        {(isModalOpen || isModalOpenLocal) && (
-          <div className='mb-[8px] flex justify-between px-2 pt-2 text-[20px] font-bold text-[#172b4d]'>
-            {isEditingName ? (
-              <input
-                className='w-full border-b-2 border-blue-500 outline-none'
-                value={name || ''}
-                onChange={(e) => setName(e.target.value)}
-                onBlur={(e) => {
-                  setIsEditingName(false)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.currentTarget.blur()
-                  }
-                }}
-                autoFocus
-              />
-            ) : (
-              <div
-                onClick={() => setIsEditingName(true)}
-                className='cursor-pointer hover:bg-gray-100'
-              >
-                {name || '卡片名'}
-              </div>
-            )}
+        </div>
+
+        {/* ListBox 功能区域 */}
+        <div className='absolute inset-0 top-16 bottom-10 overflow-auto'>
+          <ListBoxContent cards={cards} handleCardClick={handleCardClick} />
+          <ListBoxFooter handleAddCardClick={handleAddCardClick} />
+        </div>
+
+        {/* 模态框关闭按钮 */}
+        {isModalOpen && (
+          <div className='absolute top-2 right-2'>
             <button
-              onClick={handleModalClose}
+              onClick={handleCloseModal}
               className='rounded px-2 py-1 text-gray-100'
             >
               <IconCircleX className='h-6 w-6 text-gray-300' />
             </button>
           </div>
         )}
-
-        {data.modules?.members && (
-          <div className='module-container'>
-            <MembersModule
-              currentCard={currentCard}
-              onChange={(newData, action) => {
-                // Handle members change
-              }}
-            />
-          </div>
-        )}
-
-        {data.modules?.labels && (
-          <div className='module-container'>
-            <LabelsModule
-              currentCard={currentCard}
-              onChange={(newData, action) => {
-                // Handle labels change
-              }}
-            />
-          </div>
-        )}
-
-        {data.modules?.checklist && (
-          <div className='module-container'>
-            <ChecklistModule
-              currentCard={currentCard}
-              onChange={(newData, action) => {
-                // Handle checklist change
-              }}
-            />
-          </div>
-        )}
-
-        {data.modules?.dates && (
-          <div className='module-container'>
-            <DatesModule
-              currentCard={currentCard}
-              onChange={(newData, action) => {
-                // Handle dates change
-              }}
-            />
-          </div>
-        )}
-
-        {data.modules?.customFields && (
-          <div className='module-container'>
-            <CustomFieldsModule
-              currentCard={currentCard}
-              onChange={(newData, action) => {
-                // Handle custom fields change
-              }}
-            />
-          </div>
-        )}
       </div>
-    </Card>
+
+      {/* 卡片编辑器模态框 */}
+      {isModalOpen &&
+        createPortal(
+          <CardEditor
+            isModalOpen={isModalOpen}
+            currentClickCard={currentClickCard}
+            handleModalSubmit={() => {}}
+            handleModalClose={handleCloseModal}
+            activeModules={activeModules}
+            setActiveModules={setActiveModules}
+            cards={cards}
+            setCards={setCards}
+          />,
+          document.body
+        )}
+      <Handle type='target' position={Position.Left} id={'left'} />
+      <Handle type='source' position={Position.Right} id={'right'} />
+    </>
   )
 }
 

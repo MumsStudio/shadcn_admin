@@ -13,7 +13,7 @@ const CircleNode = ({ data }: any) => {
       }}
     >
       <Handle type='target' position={Position.Left} id={'left'} />
-      <Handle type='source' position={Position.Right} id={'right'}/>
+      <Handle type='source' position={Position.Right} id={'right'} />
     </div>
   )
 }
