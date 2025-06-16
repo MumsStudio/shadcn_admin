@@ -1,4 +1,5 @@
 // 引入 axios
+import { dataBarUKey } from '@univerjs/presets/lib/types/preset-sheets-conditional-formatting/index.js';
 import axios from '@/api/base';
 
 
@@ -64,10 +65,26 @@ export default {
     })
   },
   // 设置文档权限
-  _SetDocumentPermission: (id: any) => {
+  _SetDocumentPermission: (id: any, data: any) => {
     return axios({
       method: 'post',
-      url: `/document/${id}/permissions`,
+      url: `/documents/${id}/permissions`,
+      data,
+    })
+  },
+  // 删除文档权限
+  _DelDocumentPermission: (id: any, data: any) => {
+    return axios({
+      method: 'delete',
+      url: `/documents/${id}/permissions`,
+      data,
+    })
+  },
+  // 获取文档权限
+  _GetDocumentPermission: (id: any) => {
+    return axios({
+      method: 'get',
+      url: `/documents/${id}/collaborators`,
     })
   },
   /**获取所有用户 */

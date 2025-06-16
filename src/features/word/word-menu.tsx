@@ -1,20 +1,39 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
+  IconCircleDashedCheck,
   IconFolderFilled,
   IconReceipt,
   IconTournament,
 } from '@tabler/icons-react'
 import { FileText, Folder, MoreHorizontal, Plus, Upload } from 'lucide-react'
-import { showSuccessData } from '@/utils/show-submitted-data'
+import { X } from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
+import { showSuccessData, showErrorData } from '@/utils/show-submitted-data'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Tree } from '@/components/ui/tree'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -30,17 +49,63 @@ interface Document {
   id: string
   name: string
   type: 'file' | 'folder'
+  disabled?: boolean
   parentId?: string
   children?: Document[]
+  collaborators?: Collaborator[]
+}
+
+interface Collaborator {
+  email: string
+  permission: 'VIEW' | 'EDIT' | 'ADMIN'
+}
+
+interface User {
+  id: string
+  email: string
+  name: string
 }
 
 export default function WordMenu() {
   const navigate = useNavigate()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [disabled, setDisabled] = useState(false)
   const [sortConfig, setSortConfig] = useState<{
     key: string
     direction: string
   }>({ key: 'name', direction: 'asc' })
+
+  // 编辑权限相关状态
+  const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false)
+  const [currentEditingDoc, setCurrentEditingDoc] = useState<Document | null>(
+    null
+  )
+  const [newCollaboratorEmail, setNewCollaboratorEmail] = useState('')
+  const [newCollaboratorPermission, setNewCollaboratorPermission] = useState<
+    'VIEW' | 'EDIT' | 'ADMIN'
+  >('VIEW')
+  const [users, setUsers] = useState<User[]>([])
+  const [userInfo, setUserInfo] = useState<any>({})
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([])
+  const authStore = useAuthStore()
+  const email = authStore.auth.user?.email
+  useEffect(() => {
+    if (currentEditingDoc?.ownerEmail) {
+      fetchUserDetail()
+    }
+    getCollaborators()
+  }, [isPermissionDialogOpen === true])
+  // 获取用户列表
+  const fetchUsers = async () => {
+    try {
+      const response = await Request._GetUsers()
+      const data = response.data
+      setUsers(data)
+    } catch (error) {
+      showErrorData(error)
+      console.error('Failed to fetch users:', error)
+    }
+  }
 
   const handleSort = (key: string) => {
     let direction = 'asc'
@@ -65,67 +130,41 @@ export default function WordMenu() {
     })
   }
 
-  const [documents, setDocuments] = useState<Document[]>([
-    // {
-    //   id: 'folder1',
-    //   parentId: '-1',
-    //   name: '项目文档',
-    //   type: 'folder',
-    //   children: [
-    //     {
-    //       parentId: 'folder1',
-    //       id: 'file1',
-    //       name: '需求文档.docx',
-    //       type: 'file',
-    //     },
-    //     {
-    //       parentId: 'folder1',
-    //       id: 'file2',
-    //       name: '设计文档.docx',
-    //       type: 'file',
-    //     },
-    //   ],
-    // },
-    // {
-    //   id: 'folder2',
-    //   parentId: '-1',
-    //   name: '会议记录',
-    //   type: 'folder',
-    //   children: [
-    //     {
-    //       id: 'folder3',
-    //       parentId: 'folder2',
-    //       name: '周会记录',
-    //       type: 'folder',
-    //       children: [
-    //         {
-    //           id: 'file3',
-    //           parentId: 'folder3',
-    //           name: '2024年10月1日周会记录.docx',
-    //           type: 'file',
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       id: 'file4',
-    //       parentId: 'folder2',
-    //       name: '项目评审.docx',
-    //       type: 'file',
-    //     },
-    //   ],
-    // },
-  ])
-  // 获取文档目录
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [allFiles, setAllFiles] = useState<any>([])
+  useEffect(() => {
+    console.log('documents', documents)
+  }, [documents])
+
+  const handleDisabled = (items: any) => {
+    const permissions = items.map((file: any) => file.permissions) || []
+    const formatArray: any = []
+    permissions.map((item: any) => {
+      formatArray.push(...item)
+    })
+    const permission = formatArray.filter((p: any) => p.userEmail === email)
+    return permission
+  }
   const buildDocumentTree = (items: Document[]): Document[] => {
     const itemMap = new Map<string, Document>()
     const tree: Document[] = []
-
-    // 首先创建所有项的映射
+    const permission = handleDisabled(items)
+    const permissionType = ['EDIT', 'ADMIN']
     items.forEach((item) => {
-      itemMap.set(item.id, { ...item, children: [] })
+      const docitem =
+        permission.find((doc: any) => doc.documentId === item.id) || {}
+      console.log('docitem', docitem)
+      itemMap.set(item.id, {
+        ...item,
+        children: [],
+        disabled:
+          permissionType.includes(docitem.permission) ||
+          item.ownerEmail === email
+            ? false
+            : true,
+      })
     })
 
-    // 构建树结构
     items.forEach((item) => {
       const node = itemMap.get(item.id)
       if (item.parentId === '-1' || !item.parentId) {
@@ -140,24 +179,24 @@ export default function WordMenu() {
 
     return tree
   }
+
   const getDocuments = async () => {
-    Request._GetDocument().then((res: any) => {
-      if (res && res.data) {
-        const treeData = buildDocumentTree(res.data)
-        setDocuments(treeData)
-      }
-    })
+    const res = await Request._GetDocument()
+    const data = res.data
+    const treeData = buildDocumentTree(res.data)
+    setDocuments(treeData)
   }
+
   useEffect(() => {
     getDocuments()
   }, [])
+
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null)
   const [currentPath, setCurrentPath] = useState<Document[]>([])
   const [currentDocuments, setCurrentDocuments] =
     useState<Document[]>(documents)
 
   useEffect(() => {
-    // 自动选中第一个文件夹
     const firstFolder = documents.find((doc) => doc.type === 'folder')
     if (firstFolder) {
       handleDocumentClick(firstFolder.id)
@@ -170,8 +209,6 @@ export default function WordMenu() {
     if (!clickedDoc) return
 
     if (clickedDoc.type === 'folder') {
-      // 检查是否是根目录下的文件夹或当前路径下的子文件夹
-      // 查找点击文件夹在文档树中的完整路径
       const newPath = []
       let current: any = clickedDoc
       while (current) {
@@ -181,7 +218,6 @@ export default function WordMenu() {
       setCurrentPath(newPath)
       setCurrentDocuments(clickedDoc.children || [])
     } else {
-      // 假设 clickedDoc 变量在当前作用域内存在，将 id 拼接到 URL 中
       window.open(`/word/detail/${clickedDoc.id}`, '_blank')
     }
   }
@@ -197,14 +233,12 @@ export default function WordMenu() {
   }
 
   const handleEdit = (doc: Document) => {
-    // TODO: 实现编辑逻辑
     console.log('编辑文档:', doc)
   }
 
   const handleDelete = async (id: string) => {
     try {
       await Request._DeleteDocument(id)
-      // 重新获取文档列表
       const res = await Request._GetDocument()
       if (res && res.data) {
         const treeData = buildDocumentTree(res.data)
@@ -215,6 +249,149 @@ export default function WordMenu() {
       console.error('删除文档失败:', error)
     } finally {
       getDocuments()
+    }
+  }
+  const fetchUserDetail = async () => {
+    try {
+      const response = await Request._GetUserInfo(currentEditingDoc?.ownerEmail)
+      const { data } = response
+      setUserInfo(data)
+      setFilteredUsers([data])
+    } catch (error) {
+      showErrorData(error)
+      console.error('Failed to fetch users:', error)
+    }
+  }
+  const getCollaborators = async () => {
+    try {
+      await fetchUsers()
+      const response = await Request._GetDocumentPermission(
+        currentEditingDoc?.id
+      )
+      const { data } = response
+      const CollaboratorData = users
+        .filter((user) => {
+          return data.some((c: any) => c.userEmail === user.email)
+        })
+        .map((user: any) => {
+          return {
+            id: user.id,
+            name: user.name,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            permission: data.find((c: any) => c.userEmail === user.email)
+              ?.permission,
+          }
+        })
+      setFilteredUsers((prev) => [...prev, ...CollaboratorData])
+      setCurrentEditingDoc((prev) => {
+        if (!prev) return null
+        return {
+          ...prev,
+          collaborators: CollaboratorData,
+        }
+      })
+    } catch (error) {
+      showErrorData(error)
+      console.error('Failed to fetch users:', error)
+    }
+  }
+  // 打开权限编辑弹窗
+  const handleOpenPermissionDialog = (doc: Document) => {
+    setCurrentEditingDoc(doc)
+    setIsPermissionDialogOpen(true)
+  }
+
+  // 添加协作者
+  const handleAddCollaborator = () => {
+    if (!newCollaboratorEmail || !currentEditingDoc) return
+
+    // 获取选中的用户
+    const selectedUser = users.find(
+      (user) => user.email === newCollaboratorEmail
+    )
+    if (!selectedUser) return
+
+    // 检查是否已经是协作者
+    const isAlreadyCollaborator = currentEditingDoc.collaborators?.some(
+      (c) => c.email === selectedUser.email
+    )
+
+    if (isAlreadyCollaborator) {
+      alert('该用户已经是协作者')
+      return
+    }
+
+    const newCollaborator = {
+      email: selectedUser.email,
+      permission: newCollaboratorPermission,
+    }
+
+    // 更新当前编辑文档的协作者列表
+    setCurrentEditingDoc((prev) => ({
+      ...prev!,
+      collaborators: [...(prev?.collaborators || []), newCollaborator],
+    }))
+
+    // 清空选择
+    setNewCollaboratorEmail('')
+    setNewCollaboratorPermission('VIEW')
+
+    setFilteredUsers((prev) => [...prev, selectedUser])
+    handleSavePermissions(newCollaborator)
+  }
+  const removeCollaborator = async (email: string) => {
+    try {
+      await Request._DelDocumentPermission(currentEditingDoc?.id, {
+        userEmail: email,
+      })
+      showSuccessData('权限删除成功')
+      getCollaborators() // 刷新协作者列表
+    } catch (error) {
+      showErrorData(error)
+      console.error('删除失败:', error)
+    }
+  }
+  // 移除协作者
+  const handleRemoveCollaborator = (email: string) => {
+    if (!currentEditingDoc) return
+
+    setCurrentEditingDoc((prev) => ({
+      ...prev!,
+      collaborators:
+        prev?.collaborators?.filter((c) => c.email !== email) || [],
+    }))
+
+    // 将被移除的用户重新加入可选用户列表
+    const removedUser = users.find((user) => user.email === email)
+    removeCollaborator(email)
+    setFilteredUsers((prev) =>
+      prev.filter((user) => user.email !== removedUser?.email)
+    )
+  }
+
+  // 保存权限更改
+  const handleSavePermissions = async (newCollaborator: {
+    email: string
+    permission: string
+  }) => {
+    if (!currentEditingDoc) return
+
+    const data = {
+      userEmail: newCollaborator.email,
+      permission: newCollaborator.permission,
+    }
+    console.log('currentEditingDoc', data)
+    // return
+    try {
+      // 调用API更新文档权限
+      await Request._SetDocumentPermission(currentEditingDoc.id, data)
+
+      showSuccessData('权限更新成功')
+      getDocuments() // 刷新文档列表
+    } catch (error) {
+      console.error('更新权限失败:', error)
     }
   }
 
@@ -282,7 +459,6 @@ export default function WordMenu() {
                   variant='outline'
                   onClick={() => {
                     setIsDialogOpen(true)
-                    // 保留原有选择逻辑
                   }}
                 >
                   <Plus size={30} className='mr-1 border-gray-400' />
@@ -304,7 +480,6 @@ export default function WordMenu() {
                   onSuccess={() => {
                     getDocuments()
                   }}
-                  // 为了解决类型不匹配问题，将 null 转换为 undefined
                   parentId={selectedDocument ?? undefined}
                 />
                 <Button
@@ -443,10 +618,25 @@ export default function WordMenu() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align='end'>
-                            <DropdownMenuItem onClick={() => handleEdit(doc)}>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleOpenPermissionDialog(doc)
+                              }}
+                            >
+                              编辑权限
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={doc.disabled}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEdit(doc)
+                              }}
+                            >
                               编辑
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              disabled={doc.disabled}
                               onClick={(e) => {
                                 e.stopPropagation()
                                 handleDelete(doc.id)
@@ -464,6 +654,203 @@ export default function WordMenu() {
             )}
           </div>
         </div>
+
+        {/* 权限编辑弹窗 */}
+        <Dialog
+          open={isPermissionDialogOpen}
+          onOpenChange={setIsPermissionDialogOpen}
+        >
+          <DialogContent className='sm:max-w-[600px]'>
+            <DialogHeader>
+              <DialogTitle>编辑文档权限</DialogTitle>
+            </DialogHeader>
+            <div className='space-y-4 py-2'>
+              <div>
+                <h4 className='mb-2 text-sm font-medium'>
+                  当前文档: {currentEditingDoc?.name}
+                </h4>
+
+                {/* 协作者列表 */}
+                <div className={`mb-4 space-y-2`}>
+                  <h4 className='py-2 text-sm font-medium'>所有者</h4>
+                  <div className='space-between flex items-center gap-3'>
+                    <Avatar className='z-1 size-10'>
+                      <AvatarImage
+                        src={''}
+                        alt={userInfo.username || userInfo.email}
+                      />
+                      <AvatarFallback className='bg-[#2CB0C8]'>
+                        {`${userInfo.firstName?.substring(0, 1)}${userInfo.lastName?.substring(0, 1)}` ||
+                          userInfo.email?.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>{userInfo.email}</div>
+                  </div>
+                  {}
+                  <h4 className='py-2 text-sm font-medium'>协作者</h4>
+                  {currentEditingDoc?.collaborators?.length ? (
+                    <div className='space-y-2'>
+                      {currentEditingDoc.collaborators.map(
+                        (collaborator: any) => (
+                          <div
+                            key={collaborator.email}
+                            className='flex items-center justify-between rounded border p-2'
+                          >
+                            <Avatar className='z-1 size-10'>
+                              <AvatarImage src={''} alt={collaborator.email} />
+                              <AvatarFallback className='bg-[#2CB0C8]'>
+                                {`${collaborator.firstName?.substring(0, 1)}${collaborator.lastName?.substring(0, 1)}` ||
+                                  collaborator.email
+                                    ?.substring(0, 2)
+                                    .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{collaborator.email}</span>
+                            <div className='flex items-center gap-2'>
+                              <Select
+                                value={collaborator.permission}
+                                disabled={
+                                  !(
+                                    currentEditingDoc?.collaborators?.find(
+                                      (item) => item.email === email
+                                    )?.permission === 'ADMIN' ||
+                                    currentEditingDoc?.ownerEmail === email
+                                  )
+                                }
+                                onValueChange={(
+                                  value: 'VIEW' | 'EDIT' | 'ADMIN'
+                                ) => {
+                                  setCurrentEditingDoc((prev) => ({
+                                    ...prev!,
+                                    collaborators:
+                                      prev?.collaborators?.map((c) =>
+                                        c.email === collaborator.email
+                                          ? { ...c, permission: value }
+                                          : c
+                                      ) || [],
+                                  }))
+                                  handleSavePermissions({
+                                    email: collaborator.email,
+                                    permission: value,
+                                  })
+                                }}
+                              >
+                                <SelectTrigger className='w-[120px]'>
+                                  <SelectValue placeholder='选择权限' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value='VIEW'>查看</SelectItem>
+                                  <SelectItem value='EDIT'>编辑</SelectItem>
+                                  <SelectItem value='ADMIN'>管理</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                disabled={
+                                  !(
+                                    currentEditingDoc?.collaborators?.find(
+                                      (item) => item.email === email
+                                    )?.permission === 'ADMIN' ||
+                                    currentEditingDoc?.ownerEmail === email
+                                  )
+                                }
+                                onClick={() =>
+                                  handleRemoveCollaborator(collaborator.email)
+                                }
+                              >
+                                <X className='h-4 w-4' />
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <p className='text-sm text-gray-500'>暂无协作者</p>
+                  )}
+                </div>
+
+                {/* 添加新协作者 */}
+                {(currentEditingDoc?.collaborators?.find(
+                  (item) => item.email === email
+                )?.permission === 'ADMIN' ||
+                  currentEditingDoc?.ownerEmail === email) && (
+                  <div className='space-y-2'>
+                    <h4 className='text-sm font-medium'>添加协作者</h4>
+                    <div className='flex gap-2'>
+                      <Select
+                        value={newCollaboratorEmail}
+                        onValueChange={setNewCollaboratorEmail}
+                      >
+                        <SelectTrigger className='w-[300px]'>
+                          <SelectValue placeholder='选择用户' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {/* {filteredUsers.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name} ({user.email})
+                          </SelectItem>
+                        ))} */}
+                          {users.map((user: any) => (
+                            <SelectItem
+                              key={user.id}
+                              value={user.email}
+                              disabled={filteredUsers.some(
+                                (u) => u.email === user.email
+                              )}
+                              className={
+                                filteredUsers.some(
+                                  (u) => u.email === user.email
+                                )
+                                  ? 'notselected'
+                                  : ''
+                              }
+                            >
+                              {user.username || user.email}
+                              {filteredUsers.some(
+                                (u) => u.email === user.email
+                              ) ? (
+                                <IconCircleDashedCheck className='text-green-500' />
+                              ) : (
+                                <></>
+                              )}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={newCollaboratorPermission}
+                        onValueChange={(value: 'VIEW' | 'EDIT' | 'ADMIN') =>
+                          setNewCollaboratorPermission(value)
+                        }
+                      >
+                        <SelectTrigger className='w-[120px]'>
+                          <SelectValue placeholder='选择权限' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='VIEW'>查看</SelectItem>
+                          <SelectItem value='EDIT'>编辑</SelectItem>
+                          <SelectItem value='ADMIN'>管理</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button onClick={handleAddCollaborator}>添加</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* <div className='flex justify-end gap-2'> */}
+            {/* <Button
+                variant='outline'
+                onClick={() => setIsPermissionDialogOpen(false)}
+              >
+                取消
+              </Button> */}
+            {/* <Button onClick={handleSavePermissions}>保存</Button> */}
+            {/* </div> */}
+          </DialogContent>
+        </Dialog>
       </Main>
     </div>
   )

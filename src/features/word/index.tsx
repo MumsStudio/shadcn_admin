@@ -32,6 +32,8 @@ import {
   IconLayoutSidebarRightExpand,
 } from '@tabler/icons-react'
 import { Route } from '@/routes/word/detail.$id'
+import { HocuspocusProvider } from '@hocuspocus/provider'
+import Collaboration from '@tiptap/extension-collaboration'
 import { Color } from '@tiptap/extension-color'
 import { FontFamily } from '@tiptap/extension-font-family'
 import FontSize from '@tiptap/extension-font-size'
@@ -56,6 +58,7 @@ import {
 import StarterKit from '@tiptap/starter-kit'
 import { Indent } from '@weiruo/tiptap-extension-indent'
 import { Markdown } from 'tiptap-markdown'
+import * as Y from 'yjs'
 import { formatLastEditedTime } from '@/utils/common'
 import debounce from '@/utils/debounce'
 import { Main } from '@/components/layout/main'
@@ -63,9 +66,9 @@ import { LeftSelect } from '@/components/left-select'
 import { LinkPopup } from '@/components/link-popup'
 import { SimpleSelect } from '@/components/simple-select'
 import { HistoryPanel } from './components/HistoryPanel'
-import { Board } from './components/custom-command/board'
 import { ListBox } from './components/custom-command/CardCommand'
 import { Link } from './components/custom-command/LinkCommand'
+import { Board } from './components/custom-command/board'
 import { Flowchart } from './components/custom-command/flow-chart'
 import { Video } from './components/custom-command/video'
 import Request from './request'
@@ -75,6 +78,10 @@ export default function Word() {
   // 获取文档详情
   const getDocumentDetail = async () => {
     Request._GetDocumentDetail(id).then((res: any) => {
+      if (res.data?.errCode === 403) {
+        window.location.href = `/403`
+        return
+      }
       if (res) {
         const data = res.data
         setDocTitle(data.name || '未命名文档')
@@ -85,10 +92,12 @@ export default function Word() {
       }
     })
   }
+  const doc = new Y.Doc()
   const cards = localStorage.getItem('cards')
   const parsedCards = cards ? JSON.parse(cards) : {}
   // 保存文档
   const saveDocument = async () => {
+    console.log('saveDocument', content) // 打印保存的内容，用于调试
     const updateContent = {
       content,
       // ...parsedCards,
@@ -117,15 +126,19 @@ export default function Word() {
   const [showLinkPopup, setShowLinkPopup] = useState(false)
   const [linkPopupProps, setLinkPopupProps] = useState<any>({})
   useEffect(() => {
-    if (!content) return
-    console.log(cards, 'cards')
+    if (!content && content == '') return
     const debouncedSaveDocument = debounce(saveDocument, 800)
     debouncedSaveDocument()
-  }, [content, cards])
-
+  }, [content])
+  const provider = new HocuspocusProvider({
+    url: import.meta.env.VITE_WEBSOCKET_URL,
+    name: docTitle,
+  })
   const editor: any = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        history: false,
+      }),
       TextStyle,
       Underline,
       Color,
@@ -134,6 +147,9 @@ export default function Word() {
       TaskItem,
       ListBox,
       Flowchart,
+      // Collaboration.extend().configure({
+      //   document: provider.document,
+      // }),
       FontFamily.configure({
         types: ['textStyle'],
       }),
