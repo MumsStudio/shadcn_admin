@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   IconAlignLeft,
   IconAlignCenter,
@@ -34,12 +34,14 @@ import {
 import { Route } from '@/routes/word/detail.$id'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import Collaboration from '@tiptap/extension-collaboration'
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import { Color } from '@tiptap/extension-color'
 import { FontFamily } from '@tiptap/extension-font-family'
 import FontSize from '@tiptap/extension-font-size'
 import Heading from '@tiptap/extension-heading'
 import Highlight from '@tiptap/extension-highlight'
 import Image from '@tiptap/extension-image'
+import Placeholder from '@tiptap/extension-placeholder'
 import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
@@ -59,6 +61,7 @@ import StarterKit from '@tiptap/starter-kit'
 import { Indent } from '@weiruo/tiptap-extension-indent'
 import { Markdown } from 'tiptap-markdown'
 import * as Y from 'yjs'
+import { useAuthStore } from '@/stores/authStore'
 import { formatLastEditedTime } from '@/utils/common'
 import debounce from '@/utils/debounce'
 import { Main } from '@/components/layout/main'
@@ -71,10 +74,15 @@ import { Link } from './components/custom-command/LinkCommand'
 import { Board } from './components/custom-command/board'
 import { Flowchart } from './components/custom-command/flow-chart'
 import { Video } from './components/custom-command/video'
+// 在组件中使用
+import {
+  getOrCreateProvider, releaseProvider,
+} from './components/provider-manager'
 import Request from './request'
 
 export default function Word() {
   const { id } = Route.useParams()
+  let ownerEmail = ''
   // 获取文档详情
   const getDocumentDetail = async () => {
     Request._GetDocumentDetail(id).then((res: any) => {
@@ -84,6 +92,7 @@ export default function Word() {
       }
       if (res) {
         const data = res.data
+        ownerEmail = data.document.ownerEmail
         setDocTitle(data.name || '未命名文档')
         setLastSaved(
           data?.lastEditedAt ? formatLastEditedTime(data.lastEditedAt) : '刚刚'
@@ -92,7 +101,6 @@ export default function Word() {
       }
     })
   }
-  const doc = new Y.Doc()
   const cards = localStorage.getItem('cards')
   const parsedCards = cards ? JSON.parse(cards) : {}
   // 保存文档
@@ -112,6 +120,7 @@ export default function Word() {
 
   useEffect(() => {
     getDocumentDetail()
+    handleReadOnly()
   }, [])
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -125,21 +134,35 @@ export default function Word() {
   const [showHistoryPanel, setShowHistoryPanel] = useState(false)
   const [showLinkPopup, setShowLinkPopup] = useState(false)
   const [linkPopupProps, setLinkPopupProps] = useState<any>({})
+  const authStore = useAuthStore()
+  const email = authStore.auth.user?.email
+  const doc = new Y.Doc()
   useEffect(() => {
-    if (!content && content == '') return
+    if (!content || content == '' || content == '<p></p>') return
     const debouncedSaveDocument = debounce(saveDocument, 800)
     debouncedSaveDocument()
   }, [content])
-  const provider = new HocuspocusProvider({
-    url: import.meta.env.VITE_WEBSOCKET_URL,
-    name: docTitle,
-  })
+
+  const provider = useMemo(() => {
+    return getOrCreateProvider(id, email as string);
+  }, [id, email]);
+
+  useEffect(() => {
+    return () => {
+      // 组件卸载时释放provider
+      releaseProvider(id);
+    };
+  }, [id]);
   const editor: any = useEditor({
     extensions: [
       StarterKit.configure({
         history: false,
       }),
       TextStyle,
+      Placeholder.configure({
+        placeholder: 'Write something …',
+        emptyEditorClass: 'is-editor-empty',
+      }),
       Underline,
       Color,
       Image,
@@ -147,9 +170,16 @@ export default function Word() {
       TaskItem,
       ListBox,
       Flowchart,
-      // Collaboration.extend().configure({
-      //   document: provider.document,
-      // }),
+      Collaboration.extend().configure({
+        document: provider.document,
+      }),
+      CollaborationCursor.configure({
+        provider: provider,
+        user: {
+          name: email,
+          color: '#f783ac',
+        },
+      }),
       FontFamily.configure({
         types: ['textStyle'],
       }),
@@ -280,7 +310,6 @@ export default function Word() {
   >('left')
   const [fontSize, setFontSize] = useState<string>('14px')
   const [fontFamily, setfontFamily] = useState<string>('Inter')
-
   const updateFontFamily = () => {
     if (!editor) return
     const currentFontFamily = editor.getAttributes('textStyle').fontFamily
@@ -291,7 +320,28 @@ export default function Word() {
     const currentFontSize = editor.getAttributes('textStyle').fontSize
     setFontSize(currentFontSize || '14px')
   }
-
+  const handleReadOnly = async () => {
+    try {
+      const response = await Request._GetDocumentPermission(id)
+      const data = response.data
+      if (data?.errCode === 403) {
+        // window.location.href = `/403`
+        return
+      }
+      console.log('data', data) // 打印保存的内容，用于调试
+      const permission = data.find((item: any) => item.userEmail === email)
+      console.log('permission', permission)
+      console.log('email', ownerEmail) // 打印保存的内容，用于调试
+      if (permission && permission.permission === 'VIEW') {
+        if (email !== ownerEmail) {
+          editor.setEditable(false)
+        }
+        ownerEmail = ''
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
   useEffect(() => {
     if (!editor) return
     // 初始化后执行
@@ -962,7 +1012,7 @@ export default function Word() {
                       interactive: true,
                       placement: 'left-start',
                       offset: [0, -5],
-                      onHidden: () => false,
+                      onHidden: () => !editor?.isEditable,
                       getReferenceClientRect: () => {
                         const { state } = editor
                         const { $from } = state.selection
@@ -983,7 +1033,7 @@ export default function Word() {
                         return new DOMRect(lineRect.left - 10, menuTop, 0, 0)
                       },
                     }}
-                    shouldShow={() => true}
+                    // shouldShow={() => true}
                   >
                     <div className='markdown-menu flex flex-wrap shadow-lg'>
                       <LeftSelect

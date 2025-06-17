@@ -14,6 +14,7 @@ import {
   IconNotification,
   IconPackages,
   IconPalette,
+  IconPresentationAnalytics,
   IconServerOff,
   IconSettings,
   IconTableDashed,
@@ -75,6 +76,11 @@ export const sidebarData: SidebarData = {
           title: 'Table',
           url: '/table',
           icon: IconTableDashed,
+        },
+        {
+          title: 'Project',
+          url: '/project',
+          icon: IconPresentationAnalytics,
         },
         {
           title: 'Apps',
