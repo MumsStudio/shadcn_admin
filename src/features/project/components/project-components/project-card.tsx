@@ -1,20 +1,17 @@
 // components/ProjectCard.jsx
-import { Copy, LogOut, MoreVertical } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { Copy, LogOut, MoreVertical, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 
 const ProjectCard = ({
   project,
   onCopyId,
   onExitProject,
   onEnterProject,
+  onDeleteProject,
 }: any) => {
   return (
     <Card className='transition-shadow hover:shadow-md'>
@@ -56,8 +53,18 @@ const ProjectCard = ({
                   onExitProject(project)
                 }}
               >
-                <LogOut className='mr-2 h-4 w-4' />
+                <LogOut className='mr-2 h-4 w-4 text-red-500' />
                 退出项目
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className='text-red-500'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDeleteProject(project)
+                }}
+              >
+                <Trash2 className='mr-2 h-4 w-4 text-red-500' />
+                删除项目
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -71,7 +78,7 @@ const ProjectCard = ({
           </div>
           <div className='flex justify-between text-sm'>
             <span className='text-muted-foreground'>创建时间</span>
-            <span>{project.createdAt}</span>
+            <span>{new Date(project.createdAt).toLocaleString()}</span>
           </div>
           <div className='pt-2'>
             <div className='mb-1 flex justify-between text-sm'>

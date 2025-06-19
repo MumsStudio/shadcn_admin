@@ -1,109 +1,175 @@
 // pages/Project.jsx
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
 import { showErrorData, showSuccessData } from '@/utils/show-submitted-data'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import JoinProjectForm from './components/project-components/join-project-form'
 import ProjectList from './components/project-components/project-list'
+import { ConfirmDialog } from './components/ui/confirm-dialog'
 import { CreateProjectDialog } from './components/ui/dialog'
 import Request from './request'
 
 export default function Project() {
   const [projectId, setProjectId] = useState('')
+  const [joinProject, setJoinProject] = useState<any>([])
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [exitDialogOpen, setExitDialogOpen] = useState(false)
-  const [currentExitProject, setCurrentExitProject] = useState<any>({})
-  const [projects, setProjects] = useState([
-    {
-      id: '1',
-      name: '电商平台重构',
-      description: '重构现有电商平台的前端架构',
-      creator: '张三',
-      createdAt: '2023-10-15',
-      progress: 65,
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: '用户管理系统',
-      description: '开发新的用户管理后台',
-      creator: '李四',
-      createdAt: '2023-11-01',
-      progress: 30,
-      status: 'active',
-    },
-    {
-      id: '3',
-      name: 'API网关升级',
-      description: '升级现有API网关服务',
-      creator: '王五',
-      createdAt: '2023-11-15',
-      progress: 80,
-      status: 'active',
-    },
-    {
-      id: '4',
-      name: '数据分析平台',
-      description: '构建大数据分析平台',
-      creator: '王五',
-      createdAt: '2023-11-15',
-      progress: 0,
-      status: 'pending',
-    },
-  ])
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    type: '', // 'exit' or 'delete'
+    title: '',
+    description: '',
+    project: null,
+  })
+  const [projects, setProjects] = useState<any>([])
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false)
+  const [role, setRole] = useState('')
+  const authStore = useAuthStore()
+  const email = authStore.auth.user?.email
   const navigate = useNavigate()
 
-  const handleJoinProject = async () => {
-    if (!projectId.trim()) {
-      showErrorData('Please enter a project ID')
-      return
-    }
+  useEffect(() => {
+    fetchProjects()
+  }, [])
 
+  const fetchProjects = async () => {
     try {
-      window.location.href = `/project/detail/${projectId}`
+      const response = await Request._GetProjects()
+      const { data } = response
+      if (data) {
+        console.log('projects', data)
+        setProjects(data)
+      }
     } catch (error) {
       showErrorData(`Error joining project: ${error}`)
       console.error('Error joining project:', error)
     }
   }
 
-  const handleExitProject = async () => {
-    if (!currentExitProject) return
+  const handleJoinProject = async () => {
+    if (!role) {
+      showErrorData('Please choose a role')
+      return
+    }
+    const member = {
+      email: email,
+      role: role,
+    }
+    try {
+      const res = await Request._AddProjectMember(projectId, member)
+      if (res.data) {
+        showSuccessData('加入项目成功，即将跳转至项目详情页')
+        setTimeout(() => {
+          navigate({ to: `/project/detail/${projectId}` })
+        }, 2000)
+      } else {
+        showErrorData('加入项目失败，请稍后再试')
+        console.error(res)
+      }
+      setRole('')
+      setRoleDialogOpen(false)
+      setJoinProject([])
+      // window.location.href = `/project/detail/${projectId}`
+    } catch (error) {
+      showErrorData(`Error joining project: ${error}`)
+      console.error('Error joining project:', error)
+    }
+  }
+  const getJoinProjectInfo = async () => {
+    try {
+      const res = await Request._GetProjectDetail(projectId)
+      const { data } = res
+      if (data) {
+        console.log('project', data)
+        setJoinProject(data)
+        setRoleDialogOpen(true)
+      } else {
+        showErrorData(`项目ID不存在，请检查后再试！`)
+      }
+    } catch (error) {
+      showErrorData(`Error joining project: ${error}`)
+    }
+  }
+  const handleConfirmAction = async () => {
+    const { type, project }: any = confirmDialog
 
     try {
-      setProjects(projects.filter((p) => p.id !== currentExitProject?.id))
-      showSuccessData(`已退出项目: ${currentExitProject.name}`)
+      if (type === 'delete') {
+        const res = await Request._DeleteProject(project?.id)
+        const { data } = res
+        if (data) {
+          fetchProjects()
+          showSuccessData(`已删除项目: ${project.name}`)
+        }
+      } else if (type === 'exit') {
+        console.log('exit', project)
+        const { members, id } = project
+        const MemberId = members.find(
+          (member: any) => member.email === email
+        )?.id
+        const res = await Request._DeleteProjectMember(id, MemberId)
+        if (res.data) {
+          showSuccessData('退出项目成功')
+          fetchProjects()
+        } else {
+          showErrorData('退出项目失败')
+          console.error(res)
+        }
+      }
     } catch (error) {
-      showErrorData(`Error exiting project: ${error}`)
-      console.error('Error exiting project:', error)
+      showErrorData(`Error: ${error}`)
+      console.error('Error:', error)
     } finally {
-      setExitDialogOpen(false)
-      setCurrentExitProject(null)
+      setConfirmDialog({ ...confirmDialog, open: false })
     }
   }
 
   const createNewProject = async (data: {
     name: string
     description: string
-    creator: string
     status: 'active' | 'inactive'
     deadline?: string
   }) => {
     try {
-      // 实际项目中这里会有创建项目的逻辑
+      const newProject = {
+        ...data,
+        progress: 0,
+        activities: [
+          {
+            id: Date.now(),
+            action: '创建了此项目',
+            description: data.name,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      }
+      const res = await Request._CreateProject(newProject)
+      const { data: project } = res
+      console.log('newProject', project)
+      if (project) {
+        fetchProjects()
+        showSuccessData('项目创建成功')
+      }
     } catch (error) {
       showErrorData(`Error creating project: ${error}`)
       console.error('Error creating project:', error)
@@ -117,6 +183,19 @@ export default function Project() {
 
   const enterProject = (projectId: string) => {
     navigate({ to: `/project/detail/${projectId}` })
+  }
+
+  const openConfirmDialog = (type: 'exit' | 'delete', project: any) => {
+    setConfirmDialog({
+      open: true,
+      type,
+      title: type === 'exit' ? '确认退出项目?' : '确认删除项目?',
+      description:
+        type === 'exit'
+          ? `您确定要退出项目 ${project?.name} 吗? 退出后将无法访问该项目。`
+          : `您确定要删除项目 ${project?.name} 吗? 删除后将无法恢复该项目。`,
+      project,
+    })
   }
 
   return (
@@ -140,17 +219,17 @@ export default function Project() {
         <JoinProjectForm
           projectId={projectId}
           setProjectId={setProjectId}
-          onJoinProject={handleJoinProject}
+          onJoinProject={getJoinProjectInfo}
         />
 
         <ProjectList
           projects={projects}
           onCopyId={copyProjectId}
-          onExitProject={(project: any) => {
-            setCurrentExitProject(project)
-            setExitDialogOpen(true)
-          }}
+          onExitProject={(project: any) => openConfirmDialog('exit', project)}
           onEnterProject={enterProject}
+          onDeleteProject={(project: any) =>
+            openConfirmDialog('delete', project)
+          }
         />
 
         <CreateProjectDialog
@@ -159,23 +238,53 @@ export default function Project() {
           onSubmit={createNewProject}
         />
 
-        <AlertDialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>确认退出项目?</AlertDialogTitle>
-              <AlertDialogDescription>
-                您确定要退出项目 {currentExitProject?.name} 吗?
-                退出后将无法访问该项目。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction onClick={handleExitProject}>
-                确认退出
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          open={confirmDialog.open}
+          onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          onConfirm={handleConfirmAction}
+        />
+
+        <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>加入项目</DialogTitle>
+            </DialogHeader>
+            <div className='grid gap-4 py-4'>
+              <div className='grid grid-cols-1 items-center gap-4'>
+                <Label htmlFor='name' className='text-right'>
+                  加入项目名称：{joinProject.name}
+                </Label>
+                <Label htmlFor='name' className='text-right'>
+                  加入项目负责人：{joinProject.creator}
+                </Label>
+                <Label htmlFor='name' className='text-right'>
+                  加入成员：
+                </Label>
+                <Input value={email} disabled={true} />
+              </div>
+              <div className='grid grid-cols-1 items-center gap-4'>
+                <Label className='text-right'>选择加入的角色：</Label>
+                <Select value={role} onValueChange={(value) => setRole(value)}>
+                  <SelectTrigger className='col-span-3'>
+                    <SelectValue placeholder='选择角色' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='leader'>组长</SelectItem>
+                    <SelectItem value='developer'>开发</SelectItem>
+                    <SelectItem value='designer'>设计</SelectItem>
+                    <SelectItem value='qa'>测试</SelectItem>
+                    {/* <SelectItem value='owner'>项目负责人</SelectItem> */}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleJoinProject}>进入</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Main>
     </>
   )

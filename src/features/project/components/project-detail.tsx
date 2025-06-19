@@ -1,66 +1,32 @@
-import { useState } from 'react'
-import { useRouter } from '@tanstack/react-router'
-import {
-  ChevronLeft,
-  Edit,
-  Plus,
-  Users,
-  MoreVertical,
-  Trash2,
-} from 'lucide-react'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import TeamManagement from './team'
-import {
-  Timeline,
-  TimelineItem,
-  TimelineContent,
-  TimelineDot,
-  TimelineSeparator,
-  TimelineConnector,
-} from './ui/timeline'
+import { useEffect, useState } from 'react';
+import { useRouter } from '@tanstack/react-router';
+import { IconCircleDashedCheck } from '@tabler/icons-react';
+import { Route } from '@/routes/_authenticated/project/detail.$id';
+import { ChevronLeft, Edit, Plus, Users, MoreVertical, Trash2, Activity, User } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import { showErrorData, showSuccessData } from '@/utils/show-submitted-data';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Header } from '@/components/layout/header';
+import { Main } from '@/components/layout/main';
+import Request from '../request';
+import TeamManagement from './team';
+import { Timeline, TimelineItem, TimelineContent, TimelineDot, TimelineSeparator, TimelineConnector } from './ui/timeline';
+
 
 type Member = {
   id: string
-  name: string
-  avatar: string
+  email: string
+  avatar?: string
   role: 'leader' | 'developer' | 'designer' | 'qa'
-  joinDate: string
+  joinedAt: string
 }
 
 export default function ProjectOverview() {
@@ -69,101 +35,221 @@ export default function ProjectOverview() {
     null
   )
   const [teamDialogOpen, setTeamDialogOpen] = useState(false)
+  const [projectInfo, setProjectInfo] = useState<any>({})
   const [memberDialogOpen, setMemberDialogOpen] = useState(false)
+  const [teamMemberDialogOpen, setTeamMemberDialogOpen] = useState(false)
   const [editMember, setEditMember] = useState<Member | null>(null)
+  const [activities, setActivities] = useState<any>([])
+  const [filteredUsers, setFilteredUsers] = useState<any>([])
   const { history } = useRouter()
-  const [teamNumber, setTeamNumber] = useState<any>(null)
-
-  // 模拟数据 - 实际项目中应从API获取
-  const projectInfo = {
-    name: '电商平台重构',
-    description: '重构现有电商平台的前端架构',
-    createdAt: '2023-10-15',
-    deadline: '2024-03-30',
-    progress: 65,
-  }
-
-  const [members, setMembers] = useState<Member[]>([
-    {
-      id: '1',
-      name: '张三',
-      avatar: '',
-      role: 'leader',
-      joinDate: '2023-10-15',
-    },
-    {
-      id: '2',
-      name: '李四',
-      avatar: '',
-      role: 'developer',
-      joinDate: '2023-10-16',
-    },
-    {
-      id: '3',
-      name: '王五',
-      avatar: '',
-      role: 'designer',
-      joinDate: '2023-10-17',
-    },
-  ])
-
+  const { id } = Route.useParams()
+  const authStore = useAuthStore()
+  const email = authStore.auth.user?.email
+  const [users, setUsers] = useState<any>([])
+  const [members, setMembers] = useState<Member[]>([])
   const [newMember, setNewMember] = useState({
-    name: '',
+    email: '',
     role: 'developer' as const,
   })
-
-  const activities = [
-    {
-      id: '1',
-      action: '创建了任务卡片',
-      description: '商品详情页性能优化',
-      date: '2023-11-20 14:30',
-      user: '张三',
-    },
-    {
-      id: '2',
-      action: '完成了清单',
-      description: '用户认证模块开发',
-      date: '2023-11-18 09:15',
-      user: '李四',
-    },
-    {
-      id: '3',
-      action: '加入了项目',
-      description: '作为UI设计师加入',
-      date: '2023-11-15 10:00',
-      user: '王五',
-    },
-  ]
-
-  const handleAddMember = () => {
-    if (!newMember.name) return
-
-    const member: Member = {
-      id: Date.now().toString(),
-      name: newMember.name,
-      avatar: '',
-      role: newMember.role,
-      joinDate: new Date().toISOString().split('T')[0],
+  const [teams, setTeams] = useState<any>([])
+  useEffect(() => {
+    fetchProjectInfo()
+  }, [])
+  useEffect(() => {
+    fetchUsers()
+  }, [memberDialogOpen === true])
+  const fetchProjectInfo = async () => {
+    try {
+      const res = await Request._GetProjectDetail(id)
+      const { data } = res
+      const projectData = {
+        ...data,
+        createdAt: new Date(data.createdAt).toLocaleDateString(),
+        deadline: new Date(data.deadline).toLocaleDateString(),
+      }
+      const teamsData = data.teams.map((team: any) => ({
+        ...team,
+        expanded: false,
+      }))
+      const activitiesData = data.activities.map((activity: any) => ({
+        ...activity,
+        date: new Date(activity.date).toLocaleString(),
+      }))
+      const membersData = data.members.map((member: any) => ({
+        ...member,
+        joinedAt: new Date(member.joinedAt).toLocaleString(),
+      }))
+      setProjectInfo(projectData)
+      setMembers(membersData)
+      setActivities(activitiesData)
+      setTeams(teamsData)
+      setFilteredUsers(membersData)
+    } catch (error) {
+      console.error('Error fetching project info:', error)
     }
+  }
+  const fetchUsers = async () => {
+    try {
+      const response = await Request._GetUsers()
+      const data = response.data
+      setUsers(data)
+    } catch (error) {
+      showErrorData('获取用户列表失败')
+      console.error('Failed to fetch users:', error)
+    }
+  }
+  const handleAddMember = async () => {
+    if (!newMember.email) return
 
-    setMembers([...members, member])
-    setNewMember({ name: '', role: 'developer' })
+    const member = {
+      email: newMember.email,
+      role: newMember.role,
+    }
+    const res = await Request._AddProjectMember(id, member)
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('添加成员成功')
+    } else {
+      showErrorData('添加成员失败')
+      console.error(res)
+    }
+    setNewMember({ email: '', role: 'developer' })
     setMemberDialogOpen(false)
   }
 
-  const handleEditMember = () => {
+  const handleEditMember = async () => {
     if (!editMember) return
-
-    setMembers(members.map((m) => (m.id === editMember.id ? editMember : m)))
+    const editMemberData = {
+      ...editMember,
+      joinedAt: new Date(editMember.joinedAt),
+    }
+    const res = await Request._EditProjectMember(
+      id,
+      editMemberData,
+      editMember.id
+    )
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('编辑成员成功')
+    } else {
+      showErrorData('编辑成员失败')
+      console.error(res)
+    }
     setEditMember(null)
   }
 
-  const handleDeleteMember = (id: string) => {
-    setMembers(members.filter((m) => m.id !== id))
+  const handleDeleteMember = async (MemberId: string) => {
+    const res = await Request._DeleteProjectMember(id, MemberId)
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('删除成员成功')
+    } else {
+      showErrorData('删除成员失败')
+      console.error(res)
+    }
   }
-
+  const handleCreateNewTeam = async (
+    name: string,
+    description: string,
+    owner: string
+  ) => {
+    const newTeam = {
+      name: name,
+      description: description,
+      members: [members.find((member: any) => member.email === owner)],
+      owner: owner,
+    }
+    const res = await Request._AddProjectTeam(id, newTeam)
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('创建团队成功')
+    } else {
+      showErrorData('创建团队失败')
+      console.error(res)
+    }
+    setTeamDialogOpen(false)
+  }
+  const handleDeleteTeam = async (teamId: string) => {
+    const res = await Request._DeleteProjectTeam(id, teamId)
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('删除团队成功')
+    } else {
+      showErrorData('删除团队失败')
+      console.error(res)
+    }
+  }
+  const handleUpdateTeam = async (
+    editTeam: any,
+    name: string,
+    description: string,
+    owner: string
+  ) => {
+    const updateTeam = {
+      ...editTeam,
+      name: name,
+      description: description,
+      owner: owner,
+    }
+    const res = await Request._UpdateProjectTeam(id, updateTeam, editTeam.id)
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('编辑团队成功')
+    } else {
+      showErrorData('编辑团队失败')
+      console.error(res)
+    }
+    setTeamDialogOpen(false)
+  }
+  const handleAddTeamMember = async (team: any, memberData: string) => {
+    const addTeamMembers = members.find(
+      (member: any) => member.email === memberData
+    )
+    const updateTeam = {
+      members: [...team.members, addTeamMembers],
+    }
+    const res = await Request._UpdateProjectTeam(id, updateTeam, team.id)
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('添加团队成员成功')
+    } else {
+      showErrorData('添加团队成员失败')
+      console.error(res)
+    }
+    setTeamMemberDialogOpen(false)
+  }
+  const handleConfirmAction = async (confirmDialog: any) => {
+    const { member, team } = confirmDialog
+    const isOwner = member.email === team.owner
+    if (isOwner) {
+      showErrorData('小组负责人不能删除')
+      return
+    }
+    const deletTeamMembers = team.members.filter(
+      (item: any) => item.email !== member.email
+    )
+    const updateTeam = {
+      members: [...deletTeamMembers],
+    }
+    const res = await Request._UpdateProjectTeam(id, updateTeam, team.id)
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('删除团队成员成功')
+    } else {
+      showErrorData('删除团队成员失败')
+      console.error(res)
+    }
+  }
+  const handleToggleExpand = (id: string) => {
+    if (!teams) return
+    setTeams(
+      teams.map((team: any) =>
+        team.id === id ? { ...team, expanded: !team.expanded } : team
+      )
+    )
+  }
   const roleLabels = {
+    owner: '项目负责人',
     leader: '组长',
     developer: '开发',
     designer: '设计',
@@ -247,69 +333,76 @@ export default function ProjectOverview() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className='space-y-4'>
-                  {members.map((member) => (
-                    <div
-                      key={member.id}
-                      className='flex items-center justify-between space-x-3'
-                    >
-                      <div className='flex items-center space-x-3'>
-                        <Avatar>
-                          <AvatarImage src={member.avatar} />
-                          <AvatarFallback>
-                            {member.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className='flex'>
-                            <p className='mr-2 font-medium'>{member.name}</p>
-                            <span className='inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset'>
-                              {roleLabels[member.role]}
-                            </span>
-                          </div>
-                          <div className='flex items-center space-x-2'>
-                            <span className='text-muted-foreground text-xs'>
-                              加入: {member.joinDate}
-                            </span>
+                {members.length === 0 ? (
+                  <div className='flex flex-col items-center justify-center space-y-4 rounded-lg border p-8 text-center'>
+                    <User className='text-muted-foreground h-12 w-12' />
+                    <h3 className='text-lg font-medium'>暂无成员</h3>
+                    <p className='text-muted-foreground text-sm'>
+                      当前项目还没有成员
+                    </p>
+                  </div>
+                ) : (
+                  <div className='space-y-4'>
+                    {members.map((member) => (
+                      <div
+                        key={member.id}
+                        className='flex items-center justify-between space-x-3'
+                      >
+                        <div className='flex items-center space-x-3'>
+                          <Avatar>
+                            <AvatarImage src={member.avatar} />
+                            <AvatarFallback>{member.email}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className='flex'>
+                              <p className='mr-2 font-medium'>{member.email}</p>
+                              <span className='inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset'>
+                                {roleLabels[member.role]}
+                              </span>
+                            </div>
+                            <div className='flex items-center space-x-2'>
+                              <span className='text-muted-foreground text-xs'>
+                                加入: {member.joinedAt}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='h-8 w-8'
+                            >
+                              <MoreVertical className='h-4 w-4' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem
+                              onClick={() => setEditMember(member)}
+                              className='flex items-center'
+                            >
+                              <Edit className='mr-2 h-4 w-4' />
+                              编辑
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setCurrentDeleteMember(member)
+                                setDeleteDialogOpen(true)
+                              }}
+                              className='flex items-center text-red-500'
+                            >
+                              <Trash2 className='mr-2 h-4 w-4' />
+                              删除
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            className='h-8 w-8'
-                          >
-                            <MoreVertical className='h-4 w-4' />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem
-                            onClick={() => setEditMember(member)}
-                            className='flex items-center'
-                          >
-                            <Edit className='mr-2 h-4 w-4' />
-                            编辑
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setCurrentDeleteMember(member)
-                              setDeleteDialogOpen(true)
-                            }}
-                            className='flex items-center text-red-500'
-                          >
-                            <Trash2 className='mr-2 h-4 w-4' />
-                            删除
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
-
             {/* 近期活动时间线 */}
             <Card className='lg:col-span-1'>
               <CardHeader>
@@ -317,32 +410,44 @@ export default function ProjectOverview() {
               </CardHeader>
               <CardContent>
                 <Timeline>
-                  {activities.map((activity, index) => (
-                    <TimelineItem key={activity.id}>
-                      <TimelineSeparator>
-                        <TimelineDot className='bg-blue-500' />
-                        {index !== activities.length - 1 && (
-                          <TimelineConnector />
-                        )}
-                      </TimelineSeparator>
-                      <TimelineContent>
-                        <div className='space-y-1'>
-                          <div className='flex items-center space-x-2'>
-                            <span className='font-medium'>{activity.user}</span>
-                            <span className='text-muted-foreground text-sm'>
-                              {activity.date}
-                            </span>
+                  {activities.length === 0 ? (
+                    <div className='flex flex-col items-center justify-center space-y-4 rounded-lg border p-8 text-center'>
+                      <Activity className='text-muted-foreground h-12 w-12' />
+                      <h3 className='text-lg font-medium'>暂无活动</h3>
+                      <p className='text-muted-foreground text-sm'>
+                        当前项目还没有活动记录
+                      </p>
+                    </div>
+                  ) : (
+                    activities.map((activity: any, index: any) => (
+                      <TimelineItem key={activity.id}>
+                        <TimelineSeparator>
+                          <TimelineDot className='bg-blue-500' />
+                          {index !== activities.length - 1 && (
+                            <TimelineConnector />
+                          )}
+                        </TimelineSeparator>
+                        <TimelineContent>
+                          <div className='space-y-1'>
+                            <div className='flex items-center space-x-2'>
+                              <span className='font-medium'>
+                                {activity.user}
+                              </span>
+                              <span className='text-muted-foreground text-sm'>
+                                {activity.date}
+                              </span>
+                            </div>
+                            <p className='text-sm'>
+                              <span className='text-blue-500'>
+                                {activity.action}
+                              </span>
+                              : {activity.description}
+                            </p>
                           </div>
-                          <p className='text-sm'>
-                            <span className='text-blue-500'>
-                              {activity.action}
-                            </span>
-                            : {activity.description}
-                          </p>
-                        </div>
-                      </TimelineContent>
-                    </TimelineItem>
-                  ))}
+                        </TimelineContent>
+                      </TimelineItem>
+                    ))
+                  )}
                 </Timeline>
               </CardContent>
             </Card>
@@ -352,7 +457,8 @@ export default function ProjectOverview() {
                 <CardTitle>
                   <div className='flex items-center justify-between space-x-2'>
                     <div className='flex items-center'>
-                      <Users className='mr-2 h-5 w-5' /> 项目小组 ({teamNumber})
+                      <Users className='mr-2 h-5 w-5' /> 项目小组 (
+                      {teams.length})
                     </div>
                     <Button onClick={() => setTeamDialogOpen(true)}>
                       <Plus className='mr-2 h-4 w-4' /> 创建小组
@@ -363,9 +469,20 @@ export default function ProjectOverview() {
               <CardContent>
                 <div className='max-h-[20rem] overflow-y-auto'>
                   <TeamManagement
+                    roleLabels={roleLabels}
+                    handleConfirmAction={handleConfirmAction}
+                    filteredUsers={filteredUsers}
+                    teamMemberDialogOpen={teamMemberDialogOpen}
+                    closeTeamMemberDialog={() => setTeamMemberDialogOpen(false)}
+                    openTeamMemberDialog={() => setTeamMemberDialogOpen(true)}
+                    toggleExpand={handleToggleExpand}
+                    teams={teams}
+                    AddTeamMember={handleAddTeamMember}
                     onCloseDialog={() => setTeamDialogOpen(false)}
                     dialogOpen={teamDialogOpen}
-                    setteamNumber={setTeamNumber}
+                    deleteTeam={handleDeleteTeam}
+                    updateTeam={handleUpdateTeam}
+                    createNewTeam={handleCreateNewTeam}
                     onOpenDialog={() => setTeamDialogOpen(true)}
                   />
                 </div>
@@ -379,7 +496,7 @@ export default function ProjectOverview() {
             <AlertDialogHeader>
               <AlertDialogTitle>确认删除成员?</AlertDialogTitle>
               <AlertDialogDescription>
-                您确定要删除成员 {currentDeleteMember?.name} 吗?
+                您确定要删除成员 {currentDeleteMember?.email} 吗?
                 删除后将无法恢复该成员。
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -411,14 +528,42 @@ export default function ProjectOverview() {
               <Label htmlFor='name' className='text-right'>
                 姓名
               </Label>
-              <Input
-                id='name'
-                value={newMember.name}
-                onChange={(e) =>
-                  setNewMember({ ...newMember, name: e.target.value })
+
+              <Select
+                value={newMember.email}
+                onValueChange={(value) =>
+                  setNewMember({ ...newMember, email: value })
                 }
-                className='col-span-3'
-              />
+              >
+                <SelectTrigger className='w-[300px]'>
+                  <SelectValue placeholder='选择用户' />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user: any) => (
+                    <SelectItem
+                      key={user.id}
+                      value={user.email}
+                      disabled={filteredUsers.some(
+                        (u: any) => u.email === user.email
+                      )}
+                      className={
+                        filteredUsers.some((u: any) => u.email === user.email)
+                          ? 'notselected'
+                          : ''
+                      }
+                    >
+                      {user.username || user.email}
+                      {filteredUsers.some(
+                        (u: any) => u.email === user.email
+                      ) ? (
+                        <IconCircleDashedCheck className='text-green-500' />
+                      ) : (
+                        <></>
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='role' className='text-right'>
@@ -438,6 +583,7 @@ export default function ProjectOverview() {
                   <SelectItem value='developer'>开发</SelectItem>
                   <SelectItem value='designer'>设计</SelectItem>
                   <SelectItem value='qa'>测试</SelectItem>
+                  {/* <SelectItem value='owner'>项目负责人</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>
@@ -466,9 +612,10 @@ export default function ProjectOverview() {
                   </Label>
                   <Input
                     id='name'
-                    value={editMember.name}
+                    disabled={true}
+                    value={editMember.email}
                     onChange={(e) =>
-                      setEditMember({ ...editMember, name: e.target.value })
+                      setEditMember({ ...editMember, email: e.target.value })
                     }
                     className='col-span-3'
                   />
@@ -491,6 +638,9 @@ export default function ProjectOverview() {
                       <SelectItem value='developer'>开发</SelectItem>
                       <SelectItem value='designer'>设计</SelectItem>
                       <SelectItem value='qa'>测试</SelectItem>
+                      <SelectItem disabled={true} value='owner'>
+                        项目负责人
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

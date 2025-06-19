@@ -1,10 +1,12 @@
-import ProjectCard from './project-card'
+import ProjectCard from './project-card';
+
 
 const ProjectList = ({
   projects,
   onCopyId,
   onExitProject,
   onEnterProject,
+  onDeleteProject,
 }: any) => {
   return (
     <div className='my-8'>
@@ -25,6 +27,7 @@ const ProjectList = ({
             onCopyId={onCopyId}
             onExitProject={onExitProject}
             onEnterProject={onEnterProject}
+            onDeleteProject={onDeleteProject}
           />
         ))}
       </div>

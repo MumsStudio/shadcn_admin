@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useAuthStore } from '@/stores/authStore'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -7,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,24 +28,15 @@ export function CreateProjectDialog({
   onSubmit: (data: {
     name: string
     description: string
-    creator: string
     status: 'active' | 'inactive'
     deadline?: string
   }) => Promise<void>
 }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [creator, setCreator] = useState('')
   const [status, setStatus] = useState<'active' | 'inactive'>('inactive')
   const [deadline, setDeadline] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const authStore = useAuthStore()
-  const email = authStore.auth.user?.email
-  useEffect(() => {
-    if (email) {
-      setCreator(email)
-    }
-  }, [email])
   const handleSubmit = async () => {
     if (!name.trim()) return
 
@@ -56,13 +45,12 @@ export function CreateProjectDialog({
       await onSubmit({
         name,
         description,
-        creator,
         status,
         deadline: deadline || undefined,
       })
       setName('')
       setDescription('')
-      setCreator('')
+      setDeadline('')
       setStatus('inactive')
       onOpenChange(false)
     } finally {
@@ -98,7 +86,7 @@ export function CreateProjectDialog({
             />
           </div>
 
-          <div className='space-y-2'>
+          {/* <div className='space-y-2'>
             <Label htmlFor='project-creator'>项目创建者</Label>
             <div className='grid grid-cols-2 gap-4'>
               <Input
@@ -109,7 +97,7 @@ export function CreateProjectDialog({
                 placeholder='项目创建者'
               />
             </div>
-          </div>
+          </div> */}
 
           <div className='space-y-2'>
             <Label htmlFor='project-deadline'>预计截至时间</Label>

@@ -787,11 +787,6 @@ export default function WordMenu() {
                           <SelectValue placeholder='选择用户' />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* {filteredUsers.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name} ({user.email})
-                          </SelectItem>
-                        ))} */}
                           {users.map((user: any) => (
                             <SelectItem
                               key={user.id}
