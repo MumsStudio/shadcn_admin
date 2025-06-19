@@ -730,3 +730,9 @@ li.heading-3 {
   position: relative;
   word-break: normal;
 }
+
+.ProseMirror .my-comment {
+  background-color: rgb(161 98 7);
+  border-bottom-width: 2px;
+  border-bottom-color: rgb(254 240 138);
+}

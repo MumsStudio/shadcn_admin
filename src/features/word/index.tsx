@@ -1,86 +1,53 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import {
-  IconAlignLeft,
-  IconAlignCenter,
-  IconAlignRight,
-  IconAlignJustified,
-  IconTextSize,
-  IconH1,
-  IconH2,
-  IconH3,
-  IconItalic,
-  IconBackground,
-  IconBold,
-  IconStrikethrough,
-  IconUnderline,
-  IconList,
-  IconListNumbers,
-  IconTypography,
-  IconHorse,
-  IconStar,
-  IconShare,
-  IconMenu,
-  IconUser,
-  IconHistory,
-  IconEye,
-  IconComet,
-  IconPaperclip,
-  IconTrash,
-  IconIndentIncrease,
-  IconIndentDecrease,
-  IconLayoutSidebarRightCollapse,
-  IconLayoutSidebarRightExpand,
-} from '@tabler/icons-react'
-import { Route } from '@/routes/word/detail.$id'
-import { HocuspocusProvider } from '@hocuspocus/provider'
-import Collaboration from '@tiptap/extension-collaboration'
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
-import { Color } from '@tiptap/extension-color'
-import { FontFamily } from '@tiptap/extension-font-family'
-import FontSize from '@tiptap/extension-font-size'
-import Heading from '@tiptap/extension-heading'
-import Highlight from '@tiptap/extension-highlight'
-import Image from '@tiptap/extension-image'
-import Placeholder from '@tiptap/extension-placeholder'
-import Table from '@tiptap/extension-table'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TableRow from '@tiptap/extension-table-row'
-import TaskItem from '@tiptap/extension-task-item'
-import TaskList from '@tiptap/extension-task-list'
-import TextAlign from '@tiptap/extension-text-align'
-import TextStyle from '@tiptap/extension-text-style'
-import Underline from '@tiptap/extension-underline'
-import {
-  useEditor,
-  EditorContent,
-  BubbleMenu,
-  FloatingMenu,
-} from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { Indent } from '@weiruo/tiptap-extension-indent'
-import { Markdown } from 'tiptap-markdown'
-import * as Y from 'yjs'
-import { useAuthStore } from '@/stores/authStore'
-import { formatLastEditedTime } from '@/utils/common'
-import debounce from '@/utils/debounce'
-import { Main } from '@/components/layout/main'
-import { LeftSelect } from '@/components/left-select'
-import { LinkPopup } from '@/components/link-popup'
-import { SimpleSelect } from '@/components/simple-select'
-import { HistoryPanel } from './components/HistoryPanel'
-import { ListBox } from './components/custom-command/CardCommand'
-import { Link } from './components/custom-command/LinkCommand'
-import { Board } from './components/custom-command/board'
-import { Flowchart } from './components/custom-command/flow-chart'
-import { Video } from './components/custom-command/video'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { IconAlignLeft, IconAlignCenter, IconAlignRight, IconAlignJustified, IconTextSize, IconH1, IconH2, IconH3, IconItalic, IconBackground, IconBold, IconStrikethrough, IconUnderline, IconList, IconListNumbers, IconTypography, IconHorse, IconStar, IconShare, IconMenu, IconUser, IconHistory, IconEye, IconComet, IconSearch, IconPaperclip, IconTrash, IconIndentIncrease, IconIndentDecrease, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from '@tabler/icons-react';
+import { Route } from '@/routes/word/detail.$id';
+import Comment from '@sereneinserenade/tiptap-comment-extension';
+import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+import { Color } from '@tiptap/extension-color';
+import { FontFamily } from '@tiptap/extension-font-family';
+import FontSize from '@tiptap/extension-font-size';
+import Heading from '@tiptap/extension-heading';
+import Highlight from '@tiptap/extension-highlight';
+import Image from '@tiptap/extension-image';
+import Placeholder from '@tiptap/extension-placeholder';
+import Table from '@tiptap/extension-table';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import TableRow from '@tiptap/extension-table-row';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
+import TextAlign from '@tiptap/extension-text-align';
+import TextStyle from '@tiptap/extension-text-style';
+import Underline from '@tiptap/extension-underline';
+import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { Indent } from '@weiruo/tiptap-extension-indent';
+import { MessageSquareText } from 'lucide-react';
+import { Markdown } from 'tiptap-markdown';
+import * as Y from 'yjs';
+import { useAuthStore } from '@/stores/authStore';
+import { formatLastEditedTime } from '@/utils/common';
+import debounce from '@/utils/debounce';
+import { Main } from '@/components/layout/main';
+import { LeftSelect } from '@/components/left-select';
+import { LinkPopup } from '@/components/link-popup';
+import { SimpleSelect } from '@/components/simple-select';
+import CommentsPanel from './components/CommentsPanel';
+import { HistoryPanel } from './components/HistoryPanel';
+import { ListBox } from './components/custom-command/CardCommand';
+import { Link } from './components/custom-command/LinkCommand';
+import { Board } from './components/custom-command/board';
+import { Flowchart } from './components/custom-command/flow-chart';
+import { Video } from './components/custom-command/video';
+import { FindReplaceDialog } from './components/find-replace';
 // 在组件中使用
-import {
-  getOrCreateProvider, releaseProvider,
-} from './components/provider-manager'
-import Request from './request'
+import { getOrCreateProvider, releaseProvider } from './components/provider-manager';
+import Request from './request';
+
 
 export default function Word() {
+  const [findReplaceOpen, setFindReplaceOpen] = useState(false)
   const { id } = Route.useParams()
   let ownerEmail = ''
   // 获取文档详情
@@ -144,15 +111,47 @@ export default function Word() {
   }, [content])
 
   const provider = useMemo(() => {
-    return getOrCreateProvider(id, email as string);
-  }, [id, email]);
+    return getOrCreateProvider(id, email as string)
+  }, [id, email])
 
   useEffect(() => {
     return () => {
       // 组件卸载时释放provider
-      releaseProvider(id);
-    };
-  }, [id]);
+      releaseProvider(id)
+    }
+  }, [id])
+
+  const [comments, setComments] = useState<any[]>([])
+  const [commentsideBarOpen, setCommentsideBarOpen] = useState(false)
+
+  const [activeCommentId, setActiveCommentId] = useState<string | null>(null)
+
+  const commentsSectionRef = useRef<HTMLDivElement | null>(null)
+
+  const focusCommentWithActiveId = (id: string) => {
+    if (!commentsSectionRef.current) return
+
+    // 确保ID是有效的CSS选择器
+    const escapedId = id.replace(/[^\w-]/g, '\\$&')
+    const commentInput =
+      commentsSectionRef.current.querySelector<HTMLInputElement>(
+        `input[id="${escapedId}"]`
+      )
+
+    if (!commentInput) return
+
+    commentInput.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'center',
+    })
+  }
+
+  useEffect(() => {
+    if (!activeCommentId) return
+
+    focusCommentWithActiveId(activeCommentId)
+  }, [activeCommentId])
   const editor: any = useEditor({
     extensions: [
       StarterKit.configure({
@@ -164,6 +163,16 @@ export default function Word() {
         emptyEditorClass: 'is-editor-empty',
       }),
       Underline,
+      Comment.configure({
+        HTMLAttributes: {
+          class: 'my-comment',
+        },
+        onCommentActivated: (commentId) => {
+          setActiveCommentId(commentId)
+
+          if (commentId) setTimeout(() => focusCommentWithActiveId(commentId))
+        },
+      }),
       Color,
       Image,
       TaskList,
@@ -581,11 +590,6 @@ export default function Word() {
         {/* 顶部导航栏 */}
         <div className='sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-4 text-[2rem]'>
           <div className='flex items-center space-x-4'>
-            {/* <button className='flex items-center space-x-1 rounded p-1 hover:bg-gray-100'>
-              <IconMenu className='h-5 w-5 text-gray-500' />
-              <span className='text-sm font-medium'>文档</span>
-            </button> */}
-
             <div className='flex items-center space-x-2'>
               <input
                 type='text'
@@ -621,13 +625,25 @@ export default function Word() {
                 <IconEye size={18} />
                 <span>预览</span>
               </button>
-              <button className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'>
+              <button
+                className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'
+                onClick={() => {
+                  setCommentsideBarOpen(!commentsideBarOpen)
+                }}
+              >
                 <IconComet size={18} />
                 <span>评论</span>
               </button>
               <button className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'>
                 <IconShare size={18} />
                 <span>分享</span>
+              </button>
+              <button
+                className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'
+                onClick={() => setFindReplaceOpen(true)}
+              >
+                <IconSearch size={18} />
+                <span>查找与替换</span>
               </button>
               <button className='flex items-center space-x-1 rounded text-gray-600 hover:bg-gray-100'>
                 <IconUser size={18} />
@@ -636,6 +652,10 @@ export default function Word() {
             </div>
           </div>
         </div>
+        <FindReplaceDialog
+          open={findReplaceOpen}
+          onOpenChange={setFindReplaceOpen}
+        />
 
         {showHistoryPanel && (
           <HistoryPanel
@@ -648,7 +668,77 @@ export default function Word() {
             onClose={() => setShowHistoryPanel(false)}
           />
         )}
-
+        {commentsideBarOpen && (
+          <section
+            className='fixed top-[4rem] right-0 z-20 flex h-[calc(100vh-4rem)] w-96 flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2'
+            ref={commentsSectionRef}
+          >
+            {comments.length ? (
+              comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className={`flex flex-col gap-4 rounded-lg border border-slate-400 p-2 ${comment.id === activeCommentId ? 'border-2 border-blue-400' : ''} box-border`}
+                >
+                  <div className='flex items-center justify-between'>
+                    <span className='flex items-end gap-2'>
+                      <span className='border-b border-blue-200 font-semibold'>
+                        {email}
+                      </span>
+                      <span className='text-xs text-slate-400'>
+                        {comment.createdAt.toLocaleDateString()}
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => {
+                        setComments(
+                          comments.filter((c) => c.id !== comment.id)
+                        ),
+                          editor.commands.unsetComment(comment.id)
+                      }}
+                      className='text-red-500 hover:text-red-700'
+                    >
+                      <IconTrash size={16} />
+                    </button>
+                  </div>
+                  <input
+                    value={comment.content || ''}
+                    disabled={comment.id !== activeCommentId}
+                    className={`rounded-lg bg-transparent p-2 text-inherit focus:outline-none ${comment.id === activeCommentId ? 'bg-slate-100' : ''}`}
+                    id={comment.id}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      setComments(
+                        comments.map((c) => {
+                          if (c.id === activeCommentId) {
+                            return { ...c, content: value }
+                          }
+                          return c
+                        })
+                      )
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter') return
+                      setActiveCommentId(null)
+                    }}
+                  />
+                  {comment.id === activeCommentId && (
+                    <button
+                      className='rounded-md bg-blue-500 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600'
+                      onClick={() => {
+                        setActiveCommentId(null)
+                        editor.commands.focus()
+                      }}
+                    >
+                      保存
+                    </button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <span className='pt-8 text-center text-slate-400'>暂无评论</span>
+            )}
+          </section>
+        )}
         <div className='flex h-[calc(100vh-48px)]'>
           {/* 左侧导航栏 */}
           <div
@@ -719,6 +809,23 @@ export default function Word() {
                         className={`rounded p-1 hover:bg-gray-300 ${editor.isActive('bold') ? 'bg-gray-300' : ''}`}
                       >
                         <IconBold className='h-4 w-4' />
+                      </button>
+                      <button
+                        className='rounded-md bg-white/10 px-2.5 py-1.5 font-semibold hover:bg-white/20'
+                        onClick={() => {
+                          const newComment = {
+                            id: `${Date.now()}`,
+                            content: '',
+                            replies: [],
+                            createdAt: new Date(),
+                          }
+                          setCommentsideBarOpen(true)
+                          setComments([...comments, newComment])
+                          editor.commands.setComment(newComment.id)
+                          setActiveCommentId(newComment.id)
+                        }}
+                      >
+                        <MessageSquareText className='h-4 w-4' />
                       </button>
                       <button
                         title='超链接 (Ctrl+K)'
@@ -1012,7 +1119,7 @@ export default function Word() {
                       interactive: true,
                       placement: 'left-start',
                       offset: [0, -5],
-                      onHidden: () => !editor?.isEditable,
+                      // onHidden: () => ,
                       getReferenceClientRect: () => {
                         const { state } = editor
                         const { $from } = state.selection
@@ -1033,7 +1140,7 @@ export default function Word() {
                         return new DOMRect(lineRect.left - 10, menuTop, 0, 0)
                       },
                     }}
-                    // shouldShow={() => true}
+                    shouldShow={() => editor?.isEditable}
                   >
                     <div className='markdown-menu flex flex-wrap shadow-lg'>
                       <LeftSelect

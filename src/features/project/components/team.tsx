@@ -49,6 +49,7 @@ import {
 } from '@/components/ui/select'
 import { Main } from '@/components/layout/main'
 import { ConfirmDialog } from './ui/confirm-dialog'
+import { useAuthStore } from '@/stores/authStore'
 
 interface TeamManagementProps {
   roleLabels: { [key: string]: string }
@@ -71,6 +72,7 @@ interface TeamManagementProps {
   openTeamMemberDialog: () => void
   closeTeamMemberDialog: () => void
   handleConfirmAction: (confirmDialog: any) => void
+  projectId: string
 }
 
 export default function TeamManagement({
@@ -89,6 +91,7 @@ export default function TeamManagement({
   openTeamMemberDialog,
   closeTeamMemberDialog,
   handleConfirmAction,
+  projectId,
 }: TeamManagementProps) {
   const [newTeamName, setNewTeamName] = useState('')
   const [newTeamDesc, setNewTeamDesc] = useState('')
@@ -101,6 +104,8 @@ export default function TeamManagement({
   const [editMode, setEditMode] = useState(false)
   const [memberData, setMemberData] = useState<any>({})
   const [currentAddMember, setCurrentAddMember] = useState<any>({})
+  const authStore = useAuthStore()
+  const email = authStore.auth.user?.email
   const [currentEditTeam, setCurrentEditTeam] = useState<null | {
     id: string
     name: string
@@ -131,7 +136,7 @@ export default function TeamManagement({
   const handleTolistClick = (teamId: string) => {
     // 处理小组点击事件，例如跳转到小组详情页
     console.log(`跳转到小组 ${teamId} 的详情页`)
-    navigate({ to: `/project/list/${teamId}` })
+    navigate({ to: `/project/list/${projectId}/${teamId}` })
   }
 
   return (
@@ -166,7 +171,9 @@ export default function TeamManagement({
                               {team.description}
                             </p>
                           </div>
-                          <div className='text-[14px]'>负责人：{team.owner}</div>
+                          <div className='text-[14px]'>
+                            负责人：{team.owner}
+                          </div>
                         </div>
                         <div className='flex items-center space-x-2'>
                           <Badge
@@ -194,6 +201,7 @@ export default function TeamManagement({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>
                               <DropdownMenuItem
+                                disabled={team.owner !== email}
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   setCurrentEditTeam({

@@ -128,8 +128,12 @@ export default function Project() {
         )?.id
         const res = await Request._DeleteProjectMember(id, MemberId)
         if (res.data) {
-          showSuccessData('退出项目成功')
-          fetchProjects()
+          if (res.data.message) {
+            showErrorData(res.data.message)
+          } else {
+            showSuccessData('退出项目成功')
+            fetchProjects()
+          }
         } else {
           showErrorData('退出项目失败')
           console.error(res)

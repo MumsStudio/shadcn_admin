@@ -14,7 +14,7 @@ type HistoryItem = {
 
 type HistoryPanelProps = {
   docId: string
-  currentContent: string
+  currentContent: string 
   onRestore: (content: string) => void
   onClose: () => void
 }

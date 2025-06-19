@@ -32,6 +32,14 @@ export default {
       url: `/projects/${id}`,
     })
   },
+  // 编辑项目
+  _UpdateProject: (id: any, data: any) => {
+    return axios({
+      method: 'patch',
+      url: `/projects/${id}`,
+      data: data,
+    })
+  },
   /**获取所有用户 */
   _GetUsers: (data: any = {}) => {
     return axios({
@@ -86,11 +94,34 @@ export default {
       url: `/projects/${projectId}/teams/${id}`,
     })
   },
-  // 设置表格权限
-  _SetTablePermission: (id: any) => {
+  // 获取小组列表信息
+  _GetTeamlists: (projectId: any, id: any) => {
+    return axios({
+      method: 'get',
+      url: `/projects/${projectId}/teams/${id}`,
+    })
+  },
+  // 创建列表
+  _CreateList: (projectTeamId: any, data: any) => {
     return axios({
       method: 'post',
-      url: `/table/${id}/permissions`,
+      url: `/projects/${projectTeamId}/lists`,
+      data: data,
     })
-  }
+  },
+  // 删除列表
+  _DeleteList: (projectTeamId: any, id: any) => {
+    return axios({
+      method: 'delete',
+      url: `/projects/${projectTeamId}/lists/${id}`,
+    })
+  },
+  // 编辑列表
+  _UpdateList: (projectTeamId: any, data: any, id: any) => {
+    return axios({
+      method: 'put',
+      url: `/projects/${projectTeamId}/lists/${id}`,
+      data: data,
+    })
+  },
 }

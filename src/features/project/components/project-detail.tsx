@@ -1,25 +1,67 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from '@tanstack/react-router';
-import { IconCircleDashedCheck } from '@tabler/icons-react';
-import { Route } from '@/routes/_authenticated/project/detail.$id';
-import { ChevronLeft, Edit, Plus, Users, MoreVertical, Trash2, Activity, User } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { showErrorData, showSuccessData } from '@/utils/show-submitted-data';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Header } from '@/components/layout/header';
-import { Main } from '@/components/layout/main';
-import Request from '../request';
-import TeamManagement from './team';
-import { Timeline, TimelineItem, TimelineContent, TimelineDot, TimelineSeparator, TimelineConnector } from './ui/timeline';
-
+import { useEffect, useState } from 'react'
+import { useNavigate, useRouter } from '@tanstack/react-router'
+import { IconCircleDashedCheck } from '@tabler/icons-react'
+import { Route } from '@/routes/_authenticated/project/detail.$id'
+import {
+  ChevronLeft,
+  Edit,
+  Plus,
+  Users,
+  MoreVertical,
+  Trash2,
+  Activity,
+  User,
+} from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
+import { showErrorData, showSuccessData } from '@/utils/show-submitted-data'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import Request from '../request'
+import TeamManagement from './team'
+import { EditProjectDialog } from './ui/dialog'
+import {
+  Timeline,
+  TimelineItem,
+  TimelineContent,
+  TimelineDot,
+  TimelineSeparator,
+  TimelineConnector,
+} from './ui/timeline'
 
 type Member = {
   id: string
@@ -41,9 +83,11 @@ export default function ProjectOverview() {
   const [editMember, setEditMember] = useState<Member | null>(null)
   const [activities, setActivities] = useState<any>([])
   const [filteredUsers, setFilteredUsers] = useState<any>([])
+  const [editOpen, setEditOpen] = useState(false)
   const { history } = useRouter()
   const { id } = Route.useParams()
   const authStore = useAuthStore()
+  const navigate = useNavigate()
   const email = authStore.auth.user?.email
   const [users, setUsers] = useState<any>([])
   const [members, setMembers] = useState<Member[]>([])
@@ -62,6 +106,11 @@ export default function ProjectOverview() {
     try {
       const res = await Request._GetProjectDetail(id)
       const { data } = res
+      if (data.errCode === 403) {
+        showErrorData(res.message)
+        navigate({ to: `/403` })
+        return
+      }
       const projectData = {
         ...data,
         createdAt: new Date(data.createdAt).toLocaleDateString(),
@@ -141,8 +190,12 @@ export default function ProjectOverview() {
   const handleDeleteMember = async (MemberId: string) => {
     const res = await Request._DeleteProjectMember(id, MemberId)
     if (res.data) {
-      fetchProjectInfo()
-      showSuccessData('删除成员成功')
+      if (res.data.message) {
+        showErrorData(res.data.message)
+      } else {
+        fetchProjectInfo()
+        showSuccessData('删除成员成功')
+      }
     } else {
       showErrorData('删除成员失败')
       console.error(res)
@@ -228,6 +281,16 @@ export default function ProjectOverview() {
     const deletTeamMembers = team.members.filter(
       (item: any) => item.email !== member.email
     )
+    const deleteListMembers = team.lists.some((item: any) =>
+      item.listmembers.some(
+        (listmember: any) => listmember.email === member.email
+      )
+    )
+    console.log(deleteListMembers)
+    if (deleteListMembers) {
+      showErrorData('小组成员已分配任务，不能删除')
+      return
+    }
     const updateTeam = {
       members: [...deletTeamMembers],
     }
@@ -248,6 +311,17 @@ export default function ProjectOverview() {
       )
     )
   }
+  const handleEditProject = async (data: any) => {
+    console.log(data)
+    const res = await Request._UpdateProject(id, data)
+    if (res.data) {
+      fetchProjectInfo()
+      showSuccessData('修改项目成功')
+    }else{
+      showErrorData('修改项目失败')
+      console.error(res)
+    }
+  }
   const roleLabels = {
     owner: '项目负责人',
     leader: '组长',
@@ -267,9 +341,20 @@ export default function ProjectOverview() {
           >
             <ChevronLeft className='!h-5 !w-5' />
           </Button>
-          <Button>
+          <Button onClick={() => setEditOpen(true)}>
             <Edit className='mr-2 h-4 w-4' /> 编辑项目
           </Button>
+          <EditProjectDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            onSubmit={handleEditProject}
+            initialData={{
+              name: projectInfo.name,
+              description: projectInfo.description || '',
+              status: projectInfo.status as 'active' | 'inactive',
+              deadline: projectInfo.deadline,
+            }}
+          />
         </div>
       </Header>
 
@@ -469,6 +554,7 @@ export default function ProjectOverview() {
               <CardContent>
                 <div className='max-h-[20rem] overflow-y-auto'>
                   <TeamManagement
+                    projectId={id}
                     roleLabels={roleLabels}
                     handleConfirmAction={handleConfirmAction}
                     filteredUsers={filteredUsers}
