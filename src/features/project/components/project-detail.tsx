@@ -86,8 +86,8 @@ export default function ProjectOverview() {
   const [editOpen, setEditOpen] = useState(false)
   const { history } = useRouter()
   const { id } = Route.useParams()
-  const authStore = useAuthStore()
   const navigate = useNavigate()
+  const authStore = useAuthStore()
   const email = authStore.auth.user?.email
   const [users, setUsers] = useState<any>([])
   const [members, setMembers] = useState<Member[]>([])
@@ -317,7 +317,7 @@ export default function ProjectOverview() {
     if (res.data) {
       fetchProjectInfo()
       showSuccessData('修改项目成功')
-    }else{
+    } else {
       showErrorData('修改项目失败')
       console.error(res)
     }

@@ -302,6 +302,9 @@ importers:
       react:
         specifier: ^19.1.0
         version: 19.1.0
+      react-beautiful-dnd:
+        specifier: ^13.1.1
+        version: 13.1.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-color:
         specifier: ^2.19.3
         version: 2.19.3(react@19.1.0)
@@ -393,6 +396,9 @@ importers:
       '@types/react':
         specifier: ^19.1.2
         version: 19.1.2
+      '@types/react-beautiful-dnd':
+        specifier: ^13.1.8
+        version: 13.1.8
       '@types/react-color':
         specifier: ^3.0.13
         version: 3.0.13(@types/react@19.1.2)
@@ -2529,6 +2535,9 @@ packages:
 
   '@types/node@22.14.1':
     resolution: {integrity: sha512-u0HuPQwe/dHrItgHHpmw3N2fYCR6x4ivMNbPHRkBVP4CvN+kiRrKHWk3i8tXiO/joPwXLMYvF9TTF0eqgHIuOw==}
+
+  '@types/react-beautiful-dnd@13.1.8':
+    resolution: {integrity: sha512-E3TyFsro9pQuK4r8S/OL6G99eq7p8v29sX0PM7oT8Z+PJfZvSQTx4zTQbUJ+QZXioAF0e7TGBEcA1XhYhCweyQ==}
 
   '@types/react-color@3.0.13':
     resolution: {integrity: sha512-2c/9FZ4ixC5T3JzN0LP5Cke2Mf0MKOP2Eh0NPDPWmuVH3NjPyhEjqNMQpN1Phr5m74egAy+p2lYNAFrX1z9Yrg==}
@@ -8052,6 +8061,10 @@ snapshots:
   '@types/node@22.14.1':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/react-beautiful-dnd@13.1.8':
+    dependencies:
+      '@types/react': 19.1.2
 
   '@types/react-color@3.0.13(@types/react@19.1.2)':
     dependencies:

@@ -101,6 +101,14 @@ export default {
       url: `/projects/${projectId}/teams/${id}`,
     })
   },
+  // 获取项目列表
+  _GetProjectLists: (projectTeamId: any, listId: any) => {
+    return axios({
+      method: 'get',
+      url: `/projects/${projectTeamId}/lists/${listId}`,
+    })
+  },
+
   // 创建列表
   _CreateList: (projectTeamId: any, data: any) => {
     return axios({
@@ -124,4 +132,12 @@ export default {
       data: data,
     })
   },
+  // 更新列表顺序
+  _UpdateListOrder: (projectTeamId: any, data: any) => {
+    return axios({
+      method: 'post',
+      url: `/projects/${projectTeamId}/lists/replace`,
+      data: data,
+    })
+  }
 }

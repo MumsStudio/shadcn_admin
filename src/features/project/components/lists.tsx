@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useRouter } from '@tanstack/react-router'
-import { IconPlus, IconCircleDashedCheck } from '@tabler/icons-react'
 import { Route } from '@/routes/_authenticated/project/list.$projectId.$id'
 import {
   Plus,
@@ -12,39 +11,21 @@ import {
   NotebookText,
   Copy,
 } from 'lucide-react'
+import { DragDropContext } from 'react-beautiful-dnd'
 import { useAuthStore } from '@/stores/authStore'
 import { showErrorData, showSuccessData } from '@/utils/show-submitted-data'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { ListCard } from '../components/list-components/ListCard'
+import { NewListForm } from '../components/list-components/NewListForm'
 import Request from '../request'
 import { CardDialog } from './ui/card-dialog'
 import { ConfirmDialog } from './ui/confirm-dialog'
 
 export default function ListManagement() {
+  const authStore = useAuthStore()
+  const email = authStore.auth.user?.email
   const [lists, setLists] = useState<any[]>([])
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
@@ -56,13 +37,15 @@ export default function ListManagement() {
   })
   const [cardDialogOpen, setCardDialogOpen] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editCard, setEditCard] = useState<any>({})
   const [newListTitle, setNewListTitle] = useState('')
   const [editList, setEditList] = useState<any>({})
   const [teamMember, setTeamMember] = useState<any[]>([])
   const [selectedMember, setSelectedMember] = useState<any[]>([])
+  const [isTransferring, setIsTransferring] = useState(false)
+  const [ListOwner, setListOwner] = useState<any>(email)
   const [showSelect, setShowSelect] = useState(false)
-  const authStore = useAuthStore()
-  const email = authStore.auth.user?.email
+
   const { projectId, id: teamId } = Route.useParams()
   useEffect(() => {
     getTeamList()
@@ -71,12 +54,15 @@ export default function ListManagement() {
     if (dialogOpen === false) {
       setNewListTitle('')
       setEditList({})
+      setListOwner(email)
       setSelectedMember([])
+      setIsTransferring(false)
     }
   }, [dialogOpen])
   useEffect(() => {
     if (cardDialogOpen === false) {
       setEditList({})
+      setEditCard({})
     }
   }, [cardDialogOpen])
   const getTeamList = async () => {
@@ -118,31 +104,8 @@ export default function ListManagement() {
     }
     setDialogOpen(false)
   }
-  const handleCardOption = async (cards: any) => {
-    console.log('cards', cards)
-    const newList = {
-      cards: [...editList.cards, cards],
-    }
-    // return
-    const res = await Request._UpdateList(teamId, newList, editList.id)
-    const { data } = res
-    if (data) {
-      getTeamList()
-      showSuccessData('新增成功')
-    } else {
-      console.log('error', res)
-      showErrorData(res.error)
-    }
-    setCardDialogOpen(false)
-  }
-  const updateList = async () => {
-    if (!newListTitle.trim()) return
-
-    const newList = {
-      name: newListTitle,
-      listmembers: selectedMember,
-    }
-    const res = await Request._UpdateList(teamId, newList, editList.id)
+  const handleUpdateListOrder = async (teamId: string, listData: any) => {
+    const res = await Request._UpdateListOrder(teamId, listData)
     const { data } = res
     if (data) {
       getTeamList()
@@ -151,11 +114,94 @@ export default function ListManagement() {
       console.log('error', res)
       showErrorData(res.error)
     }
+    return res
+  }
+  const handleUpdateList = async (
+    teamId: string,
+    newList: any,
+    listId: string
+  ) => {
+    const res = await Request._UpdateList(teamId, newList, listId)
+    const { data } = res
+    if (data) {
+      getTeamList()
+      showSuccessData('更新成功')
+    } else {
+      console.log('error', res)
+      showErrorData(res.error)
+    }
+    return res
+  }
+  const handleCardOption = async (cards: any) => {
+    const newList = {
+      cards: [...editList.cards, { ...cards, id: `${Date.now()}` }],
+    }
+    // return
+    await handleUpdateList(teamId, newList, editList.id)
+    setCardDialogOpen(false)
+  }
+  const handleEditCard = async (cards: any, editCard: any) => {
+    const { id, listId } = editCard
+    const editList = lists.find((list) => list.id === listId)
+    const editCardData = editList.cards.filter((card: any) => card.id !== id)
+    editCardData
+    const newList = {
+      cards: [...editCardData, { ...cards, id: id }],
+    }
+    await handleUpdateList(teamId, newList, listId)
+    setCardDialogOpen(false)
+  }
+  const updateList = async () => {
+    if (!newListTitle.trim()) return
+
+    const newList = {
+      name: newListTitle,
+      listmembers: selectedMember,
+      owner: ListOwner,
+    }
+    await handleUpdateList(teamId, newList, editList.id)
     setDialogOpen(false)
   }
-  const moveCard = (fromListId: string, toListId: string, cardId: string) => {
-    // 实现卡片移动逻辑
-    console.log(`Moving card ${cardId} from ${fromListId} to ${toListId}`)
+  const moveCard = async (
+    fromListId: string,
+    toListId: string,
+    cardId: string
+  ) => {
+    const fromListIndex = lists.findIndex((list) => list.id === fromListId)
+    const toListIndex = lists.findIndex((list) => list.id === toListId)
+    const cardIndex = lists[fromListIndex].cards.findIndex(
+      (card: any) => card.id === cardId
+    )
+
+    if (fromListIndex === toListIndex) return
+
+    const newLists = [...lists]
+    const [removedCard] = newLists[fromListIndex].cards.splice(cardIndex, 1)
+    newLists[toListIndex].cards.push(removedCard)
+
+    setLists(newLists)
+    console.log('newLists', newLists)
+    const newListData = newLists.map(({ id, ...list }) => ({
+      ...list,
+    }))
+    console.log('newListData', newListData)
+
+    await handleUpdateListOrder(teamId, newListData)
+  }
+
+  const onDragEnd = (result: any) => {
+    const { source, destination } = result
+
+    if (!destination) return
+
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return
+    }
+
+    moveCard(source.droppableId, destination.droppableId, result.draggableId)
   }
   const handleSelectChange = (value: any) => {
     const user = teamMember.find((u) => u.email === value)
@@ -194,8 +240,8 @@ export default function ListManagement() {
       console.log('error', res)
     }
   }
-  const handleClickCard = (cardId: string) => () => {
-    navigate({ to: `/project/card/${cardId}` })
+  const handleClickCard = (cardId: string, listId: string) => () => {
+    navigate({ to: `/project/card/${teamId}/${listId}/${cardId}` })
   }
   const openConfirmDialog = (list: any) => {
     setConfirmDialog({
@@ -204,6 +250,21 @@ export default function ListManagement() {
       description: `您确定要删除项目 ${list?.name} 吗? 删除后将无法恢复该项目。`,
       list,
     })
+  }
+  const handleDeleteCard = async (listId: string, CardId: string) => {
+    const updatedLists = lists.map((list) => {
+      if (list.id === listId) {
+        return {
+          ...list,
+          cards: list.cards.filter((card: any) => card.id !== CardId),
+        }
+      }
+      return list
+    })
+    const newListData = updatedLists.map(({ id, ...list }) => ({
+      ...list,
+    }))
+    await handleUpdateListOrder(teamId, newListData)
   }
   return (
     <>
@@ -223,213 +284,95 @@ export default function ListManagement() {
       </Header>
 
       <Main>
-        <div className='flex space-x-4 overflow-x-auto pb-4'>
-          {lists.length === 0 ? (
-            <div className='text-muted-foreground flex w-full flex-col items-center justify-center rounded border p-8'>
-              <NotebookText className='mr-2 mb-2 h-10 w-10' />
-              暂无清单，点击右上角按钮创建新清单
-            </div>
-          ) : (
-            lists.map((list) => (
-              <div key={list.id} className='w-72 flex-shrink-0'>
-                <Card>
-                  <CardHeader className='flex flex-row items-center justify-between space-y-0 p-4'>
-                    <CardTitle className='text-sm font-medium'>
-                      {list.name}
-                    </CardTitle>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' size='sm'>
-                          <MoreVertical className='h-4 w-4' />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setDialogOpen(true)
-                            setNewListTitle(list.name)
-                            setEditList(list)
-                            setSelectedMember(list.listmembers)
-                          }}
-                        >
-                          <Edit className='mr-2 h-4 w-4' /> 编辑
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDuplicateList(list)}
-                        >
-                          <Copy className='mr-2 h-4 w-4' />
-                          复制
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className='text-red-500'
-                          onClick={() => openConfirmDialog(list)}
-                        >
-                          <Trash className='mr-2 h-4 w-4 text-red-500' />
-                          删除
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </CardHeader>
-                  <CardContent className='space-y-2 p-4 pt-0'>
-                    {list.cards.map((card: any) => (
-                      <div
-                        key={card.id}
-                        className='flex items-center justify-between rounded border p-3 hover:shadow'
-                        draggable
-                        onClick={handleClickCard(card.id)}
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('cardId', card.id)
-                          e.dataTransfer.setData('fromListId', list.id)
-                        }}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          const fromListId =
-                            e.dataTransfer.getData('fromListId')
-                          const cardId = e.dataTransfer.getData('cardId')
-                          if (fromListId !== list.id) {
-                            moveCard(fromListId, list.id, cardId)
-                          }
-                        }}
-                      >
-                        <div>
-                          <p className='text-sm'>{card.title}</p>
-                          <p className='text-muted-foreground text-xs'>
-                            负责人: {card.assignedTo}
-                          </p>
-                        </div>
-                        <GripVertical className='text-muted-foreground h-4 w-4 cursor-move' />
-                      </div>
-                    ))}
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='text-muted-foreground w-full justify-start'
-                      onClick={() => {
-                        setCardDialogOpen(true), setEditList(list)
-                      }}
-                    >
-                      <Plus className='mr-2 h-4 w-4' /> 添加卡片
-                    </Button>
-                  </CardContent>
-                </Card>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className='flex space-x-4 overflow-x-auto pb-4'>
+            {lists.length === 0 ? (
+              <div className='text-muted-foreground flex w-full flex-col items-center justify-center rounded border p-8'>
+                <NotebookText className='mr-2 mb-2 h-10 w-10' />
+                暂无清单，点击右上角按钮创建新清单
               </div>
-            ))
-          )}
-        </div>
-
-        {/* 创建清单对话框 */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {Object.keys(editList).length ? '编辑清单' : '新建清单'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className='space-y-4'>
-              <Label htmlFor='title'>清单标题</Label>
-              <Input
-                placeholder='清单标题'
-                value={newListTitle}
-                onChange={(e) => setNewListTitle(e.target.value)}
-              />
-              <Label htmlFor='title'>负责人</Label>
-              <Input placeholder='负责人' value={email} disabled={true} />
-              <Label htmlFor='title'>协作者</Label>
-              <div className='module-content flex flex-col'>
-                {teamMember && teamMember.length > 0 ? (
-                  <div className='member-list flex flex-wrap items-center gap-2'>
-                    {selectedMember.map((user) => (
-                      <div key={user.email} className='relative'>
-                        <Avatar className='z-1 size-10'>
-                          <AvatarImage
-                            src={''}
-                            alt={user.username || user.email}
-                          />
-                          <AvatarFallback className='bg-[#2CB0C8]'>
-                            {/* {`${user.firstName?.substring(0, 1)}${user.lastName?.substring(0, 1)}` || */}
-                            {user.email.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <button
-                          onClick={() => handleRemoveUser(user.email)}
-                          className='absolute -top-1 -right-1 z-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white'
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={toggleInput}
-                      className='add-member-btn border border-gray-300'
-                    >
-                      <IconPlus size={30} className='text-gray-300' />
-                    </button>
-                  </div>
-                ) : (
-                  <div className='text-center text-gray-600'>
-                    该小组暂无其他成员，请先添加至小组
-                  </div>
-                )}
-
-                {showSelect && (
-                  <div className='mt-2 flex items-center gap-2'>
-                    <Select onValueChange={handleSelectChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder='选择成员' />
-                      </SelectTrigger>
-                      <SelectContent className='z-100000'>
-                        {teamMember.map((user: any) => (
-                          <SelectItem
-                            key={user.id}
-                            value={user.email}
-                            disabled={selectedMember.some(
-                              (u) => u.email === user.email
-                            )}
-                            className={
-                              selectedMember.some((u) => u.email === user.email)
-                                ? 'notselected'
-                                : ''
-                            }
-                          >
-                            {user.username || user.email}
-                            {selectedMember.some(
-                              (u) => u.email === user.email
-                            ) ? (
-                              <IconCircleDashedCheck className='text-green-500' />
-                            ) : (
-                              <></>
-                            )}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-
-              <div className='flex justify-end space-x-2'>
-                <Button variant='outline' onClick={() => setDialogOpen(false)}>
-                  取消
-                </Button>
-                <Button
-                  onClick={
-                    Object.keys(editList).length ? updateList : createNewList
+            ) : (
+              lists.map((list) => (
+                <ListCard
+                  key={list.id}
+                  list={list}
+                  onEditList={() => {
+                    setDialogOpen(true)
+                    setNewListTitle(list.name)
+                    setEditList(list)
+                    setListOwner(list.owner)
+                    setSelectedMember(list.listmembers)
+                  }}
+                  onDuplicateList={() => handleDuplicateList(list)}
+                  onDeleteList={() => openConfirmDialog(list)}
+                  onAddCard={() => {
+                    setCardDialogOpen(true)
+                    setEditList(list)
+                  }}
+                  onEditCard={(card: any) => {
+                    setEditCard({
+                      ...card,
+                      listId: list.id,
+                    })
+                    setCardDialogOpen(true)
+                  }}
+                  onDeleteCard={(cardId: string) =>
+                    handleDeleteCard(list.id, cardId)
                   }
-                >
-                  保存
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+                  onCopyCard={(card: any) => {
+                    const newCard = {
+                      ...card,
+                      id: `${Date.now()}`,
+                      title: `${card.title} (副本)`,
+                    }
+                    const newList = {
+                      cards: [...list.cards, newCard],
+                    }
+                    handleUpdateList(teamId, newList, list.id)
+                  }}
+                  handleClickCard={handleClickCard}
+                />
+              ))
+            )}
+          </div>
+        </DragDropContext>
+
+        <NewListForm
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          newListTitle={newListTitle}
+          setNewListTitle={setNewListTitle}
+          editList={editList}
+          teamMember={teamMember}
+          selectedMember={selectedMember}
+          setSelectedMember={setSelectedMember}
+          ListOwner={ListOwner}
+          setListOwner={setListOwner}
+          isTransferring={isTransferring}
+          setIsTransferring={setIsTransferring}
+          showSelect={showSelect}
+          setShowSelect={setShowSelect}
+          toggleInput={toggleInput}
+          handleSelectChange={handleSelectChange}
+          handleRemoveUser={handleRemoveUser}
+          onCreateList={createNewList}
+          onUpdateList={updateList}
+        />
 
         <CardDialog
+          projectId={projectId}
+          teamId={teamId}
           open={cardDialogOpen}
           onOpenChange={setCardDialogOpen}
           onSubmit={async (data) => {
-            handleCardOption(data)
+            if (Object.keys(editCard).length > 0) {
+              handleEditCard(data, editCard)
+            } else {
+              handleCardOption(data)
+            }
+            setEditCard(null)
           }}
+          initialData={editCard}
         />
 
         <ConfirmDialog

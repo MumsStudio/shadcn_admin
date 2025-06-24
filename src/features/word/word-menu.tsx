@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+// import { useNavigate } from '@tanstack/react-router'
 import {
   IconCircleDashedCheck,
   IconFolderFilled,
@@ -11,9 +11,8 @@ import { X } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { showSuccessData, showErrorData } from '@/utils/show-submitted-data'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -26,7 +25,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -67,9 +65,8 @@ interface User {
 }
 
 export default function WordMenu() {
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [disabled, setDisabled] = useState(false)
   const [sortConfig, setSortConfig] = useState<{
     key: string
     direction: string
@@ -131,10 +128,10 @@ export default function WordMenu() {
   }
 
   const [documents, setDocuments] = useState<Document[]>([])
-  const [allFiles, setAllFiles] = useState<any>([])
-  useEffect(() => {
-    console.log('documents', documents)
-  }, [documents])
+  // const [allFiles, setAllFiles] = useState<any>([])
+  // useEffect(() => {
+  //   console.log('documents', documents)
+  // }, [documents])
 
   const handleDisabled = (items: any) => {
     const permissions = items.map((file: any) => file.permissions) || []
@@ -182,7 +179,7 @@ export default function WordMenu() {
 
   const getDocuments = async () => {
     const res = await Request._GetDocument()
-    const data = res.data
+    // const data = res.data
     const treeData = buildDocumentTree(res.data)
     setDocuments(treeData)
   }

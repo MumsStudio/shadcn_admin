@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuthStore } from '@/stores/authStore'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,11 +18,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import Request from '../../request'
 
 export function CardDialog({
   open,
   onOpenChange,
   onSubmit,
+  initialData,
+  projectId,
+  teamId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -30,11 +35,42 @@ export function CardDialog({
     assignedTo: string
     description?: string
   }) => Promise<void>
+  initialData?: {
+    title: string
+    assignedTo: string
+    description?: string
+  }
+  projectId: string
+  teamId: string
 }) {
+  const authStore = useAuthStore()
+  const email = authStore.auth.user?.email
   const [title, setTitle] = useState('')
-  const [assignedTo, setAssignedTo] = useState('')
+  const [assignedTo, setAssignedTo] = useState(email)
   const [description, setDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isTransferring, setIsTransferring] = useState(false)
+  const [teamMember, setTeamMember] = useState<any[]>([])
+
+  useEffect(() => {
+    // 获取团队成员数据
+    const fetchTeamMembers = async () => {
+      try {
+        const res = await Request._GetTeamlists(projectId, teamId)
+        if (res.data) {
+          const TeamMembers = res.data.members || []
+          const getTeamMember = TeamMembers.filter(
+            (u: any) => u.email !== email
+          )
+          setTeamMember(getTeamMember)
+        }
+      } catch (error) {
+        console.error('获取团队成员失败:', error)
+      }
+    }
+
+    fetchTeamMembers()
+  }, [])
 
   const handleSubmit = async () => {
     if (!title.trim()) return
@@ -43,7 +79,7 @@ export function CardDialog({
       setIsSubmitting(true)
       await onSubmit({
         title,
-        assignedTo,
+        assignedTo: assignedTo || '',
         description: description || undefined,
       })
       setTitle('')
@@ -54,7 +90,20 @@ export function CardDialog({
       setIsSubmitting(false)
     }
   }
-
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setTitle(initialData?.title || '')
+      setAssignedTo(initialData?.assignedTo || '')
+      setDescription(initialData?.description || '')
+    }
+  }, [initialData])
+  useEffect(() => {
+    if (!open) {
+      setTitle('')
+      setIsTransferring(false)
+      setDescription('')
+    }
+  }, [open])
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -74,12 +123,47 @@ export function CardDialog({
 
           <div className='space-y-2'>
             <Label htmlFor='card-assigned'>负责人</Label>
-            <Input
-              id='card-assigned'
-              value={assignedTo}
-              onChange={(e) => setAssignedTo(e.target.value)}
-              placeholder='输入负责人'
-            />
+            {isTransferring ? (
+              <div className='flex items-center gap-2'>
+                <Select
+                  value={assignedTo}
+                  onValueChange={(value) => setAssignedTo(value)}
+                >
+                  <SelectTrigger className='w-[200px]'>
+                    <SelectValue placeholder='选择负责人' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamMember.map((user: any) => (
+                      <SelectItem key={user.id} value={user.email}>
+                        {user.username || user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant='outline'
+                  onClick={() => setIsTransferring(false)}
+                >
+                  取消移交
+                </Button>
+              </div>
+            ) : (
+              <div className='flex items-center gap-2'>
+                <Input
+                  id='card-assigned'
+                  value={assignedTo}
+                  disabled={true}
+                  placeholder='输入负责人'
+                />
+                <Button
+                  variant='outline'
+                  disabled={assignedTo !== email}
+                  onClick={() => setIsTransferring(true)}
+                >
+                  移交负责人
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className='space-y-2'>

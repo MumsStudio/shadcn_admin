@@ -3,25 +3,24 @@ import {
   IconLayoutSidebarRightCollapse,
   IconLayoutSidebarRightExpand,
 } from '@tabler/icons-react'
-import { useEditorContext } from '../EditorContext'
 
-const EditorSidebar = () => {
-  const { headings, activeHeadingId, editor } = useEditorContext()
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+export interface SidebarProps {
+  isSidebarCollapsed: boolean
+  headings: Array<{ id: string; text: string; level: number }>
+  activeHeadingId: string | null
+  setIsSidebarCollapsed: (collapsed: boolean) => void
+  scrollToHeading: (id: string) => void
+  setActiveHeadingId: (id: string) => void
+}
 
-  const scrollToHeading = (id: string) => {
-    const level = id.split('-')[1]
-    const index: any = id.split('-')[2]
-    const markdownEle = document.getElementsByClassName(`markdown`)[0]
-    const element = markdownEle.querySelectorAll(`h${level}`)[index]
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-    }
-  }
-
+export function Sidebar({
+  isSidebarCollapsed,
+  headings,
+  activeHeadingId,
+  setIsSidebarCollapsed,
+  scrollToHeading,
+  setActiveHeadingId,
+}: SidebarProps) {
   return (
     <>
       <div
@@ -40,6 +39,7 @@ const EditorSidebar = () => {
                 <button
                   onClick={() => {
                     scrollToHeading(heading.id)
+                    setActiveHeadingId(heading.id)
                   }}
                   className={`hover:text-primary text-sm ${heading.level === 1 ? 'font-bold' : heading.level === 2 ? 'ml-2' : 'ml-4'} ${activeHeadingId === heading.id ? 'text-blue-500' : ''}`}
                 >
@@ -70,5 +70,3 @@ const EditorSidebar = () => {
     </>
   )
 }
-
-export default EditorSidebar

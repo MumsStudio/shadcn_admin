@@ -43,8 +43,8 @@ import { Route as AuthenticatedSettingsAppearanceImport } from './routes/_authen
 import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedProjectTeamIdImport } from './routes/_authenticated/project/team.$id'
 import { Route as AuthenticatedProjectDetailIdImport } from './routes/_authenticated/project/detail.$id'
-import { Route as AuthenticatedProjectCardIdImport } from './routes/_authenticated/project/card.$id'
 import { Route as AuthenticatedProjectListProjectIdIdImport } from './routes/_authenticated/project/list.$projectId.$id'
+import { Route as AuthenticatedProjectCardTeamIdListIdIdImport } from './routes/_authenticated/project/card.$teamId.$listId.$id'
 
 // Create/Update Routes
 
@@ -252,18 +252,17 @@ const AuthenticatedProjectDetailIdRoute =
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
-const AuthenticatedProjectCardIdRoute = AuthenticatedProjectCardIdImport.update(
-  {
-    id: '/project/card/$id',
-    path: '/project/card/$id',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any,
-)
-
 const AuthenticatedProjectListProjectIdIdRoute =
   AuthenticatedProjectListProjectIdIdImport.update({
     id: '/project/list/$projectId/$id',
     path: '/project/list/$projectId/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+
+const AuthenticatedProjectCardTeamIdListIdIdRoute =
+  AuthenticatedProjectCardTeamIdListIdIdImport.update({
+    id: '/project/card/$teamId/$listId/$id',
+    path: '/project/card/$teamId/$listId/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -481,13 +480,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWordIndexImport
       parentRoute: typeof AuthenticatedRouteImport
     }
-    '/_authenticated/project/card/$id': {
-      id: '/_authenticated/project/card/$id'
-      path: '/project/card/$id'
-      fullPath: '/project/card/$id'
-      preLoaderRoute: typeof AuthenticatedProjectCardIdImport
-      parentRoute: typeof AuthenticatedRouteImport
-    }
     '/_authenticated/project/detail/$id': {
       id: '/_authenticated/project/detail/$id'
       path: '/project/detail/$id'
@@ -507,6 +499,13 @@ declare module '@tanstack/react-router' {
       path: '/project/list/$projectId/$id'
       fullPath: '/project/list/$projectId/$id'
       preLoaderRoute: typeof AuthenticatedProjectListProjectIdIdImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/project/card/$teamId/$listId/$id': {
+      id: '/_authenticated/project/card/$teamId/$listId/$id'
+      path: '/project/card/$teamId/$listId/$id'
+      fullPath: '/project/card/$teamId/$listId/$id'
+      preLoaderRoute: typeof AuthenticatedProjectCardTeamIdListIdIdImport
       parentRoute: typeof AuthenticatedRouteImport
     }
   }
@@ -549,10 +548,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedWhiteboardIndexRoute: typeof AuthenticatedWhiteboardIndexRoute
   AuthenticatedWordIndexRoute: typeof AuthenticatedWordIndexRoute
-  AuthenticatedProjectCardIdRoute: typeof AuthenticatedProjectCardIdRoute
   AuthenticatedProjectDetailIdRoute: typeof AuthenticatedProjectDetailIdRoute
   AuthenticatedProjectTeamIdRoute: typeof AuthenticatedProjectTeamIdRoute
   AuthenticatedProjectListProjectIdIdRoute: typeof AuthenticatedProjectListProjectIdIdRoute
+  AuthenticatedProjectCardTeamIdListIdIdRoute: typeof AuthenticatedProjectCardTeamIdListIdIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -567,11 +566,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedWhiteboardIndexRoute: AuthenticatedWhiteboardIndexRoute,
   AuthenticatedWordIndexRoute: AuthenticatedWordIndexRoute,
-  AuthenticatedProjectCardIdRoute: AuthenticatedProjectCardIdRoute,
   AuthenticatedProjectDetailIdRoute: AuthenticatedProjectDetailIdRoute,
   AuthenticatedProjectTeamIdRoute: AuthenticatedProjectTeamIdRoute,
   AuthenticatedProjectListProjectIdIdRoute:
     AuthenticatedProjectListProjectIdIdRoute,
+  AuthenticatedProjectCardTeamIdListIdIdRoute:
+    AuthenticatedProjectCardTeamIdListIdIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -608,10 +608,10 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersIndexRoute
   '/whiteboard': typeof AuthenticatedWhiteboardIndexRoute
   '/word': typeof AuthenticatedWordIndexRoute
-  '/project/card/$id': typeof AuthenticatedProjectCardIdRoute
   '/project/detail/$id': typeof AuthenticatedProjectDetailIdRoute
   '/project/team/$id': typeof AuthenticatedProjectTeamIdRoute
   '/project/list/$projectId/$id': typeof AuthenticatedProjectListProjectIdIdRoute
+  '/project/card/$teamId/$listId/$id': typeof AuthenticatedProjectCardTeamIdListIdIdRoute
 }
 
 export interface FileRoutesByTo {
@@ -643,10 +643,10 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersIndexRoute
   '/whiteboard': typeof AuthenticatedWhiteboardIndexRoute
   '/word': typeof AuthenticatedWordIndexRoute
-  '/project/card/$id': typeof AuthenticatedProjectCardIdRoute
   '/project/detail/$id': typeof AuthenticatedProjectDetailIdRoute
   '/project/team/$id': typeof AuthenticatedProjectTeamIdRoute
   '/project/list/$projectId/$id': typeof AuthenticatedProjectListProjectIdIdRoute
+  '/project/card/$teamId/$listId/$id': typeof AuthenticatedProjectCardTeamIdListIdIdRoute
 }
 
 export interface FileRoutesById {
@@ -681,10 +681,10 @@ export interface FileRoutesById {
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/whiteboard/': typeof AuthenticatedWhiteboardIndexRoute
   '/_authenticated/word/': typeof AuthenticatedWordIndexRoute
-  '/_authenticated/project/card/$id': typeof AuthenticatedProjectCardIdRoute
   '/_authenticated/project/detail/$id': typeof AuthenticatedProjectDetailIdRoute
   '/_authenticated/project/team/$id': typeof AuthenticatedProjectTeamIdRoute
   '/_authenticated/project/list/$projectId/$id': typeof AuthenticatedProjectListProjectIdIdRoute
+  '/_authenticated/project/card/$teamId/$listId/$id': typeof AuthenticatedProjectCardTeamIdListIdIdRoute
 }
 
 export interface FileRouteTypes {
@@ -720,10 +720,10 @@ export interface FileRouteTypes {
     | '/users'
     | '/whiteboard'
     | '/word'
-    | '/project/card/$id'
     | '/project/detail/$id'
     | '/project/team/$id'
     | '/project/list/$projectId/$id'
+    | '/project/card/$teamId/$listId/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -754,10 +754,10 @@ export interface FileRouteTypes {
     | '/users'
     | '/whiteboard'
     | '/word'
-    | '/project/card/$id'
     | '/project/detail/$id'
     | '/project/team/$id'
     | '/project/list/$projectId/$id'
+    | '/project/card/$teamId/$listId/$id'
   id:
     | '__root__'
     | '/_authenticated'
@@ -790,10 +790,10 @@ export interface FileRouteTypes {
     | '/_authenticated/users/'
     | '/_authenticated/whiteboard/'
     | '/_authenticated/word/'
-    | '/_authenticated/project/card/$id'
     | '/_authenticated/project/detail/$id'
     | '/_authenticated/project/team/$id'
     | '/_authenticated/project/list/$projectId/$id'
+    | '/_authenticated/project/card/$teamId/$listId/$id'
   fileRoutesById: FileRoutesById
 }
 
@@ -871,10 +871,10 @@ export const routeTree = rootRoute
         "/_authenticated/users/",
         "/_authenticated/whiteboard/",
         "/_authenticated/word/",
-        "/_authenticated/project/card/$id",
         "/_authenticated/project/detail/$id",
         "/_authenticated/project/team/$id",
-        "/_authenticated/project/list/$projectId/$id"
+        "/_authenticated/project/list/$projectId/$id",
+        "/_authenticated/project/card/$teamId/$listId/$id"
       ]
     },
     "/_authenticated/settings": {
@@ -987,10 +987,6 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/word/index.tsx",
       "parent": "/_authenticated"
     },
-    "/_authenticated/project/card/$id": {
-      "filePath": "_authenticated/project/card.$id.tsx",
-      "parent": "/_authenticated"
-    },
     "/_authenticated/project/detail/$id": {
       "filePath": "_authenticated/project/detail.$id.tsx",
       "parent": "/_authenticated"
@@ -1001,6 +997,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/project/list/$projectId/$id": {
       "filePath": "_authenticated/project/list.$projectId.$id.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/project/card/$teamId/$listId/$id": {
+      "filePath": "_authenticated/project/card.$teamId.$listId.$id.tsx",
       "parent": "/_authenticated"
     }
   }
