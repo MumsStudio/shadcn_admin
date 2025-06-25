@@ -139,5 +139,26 @@ export default {
       url: `/projects/${projectTeamId}/lists/replace`,
       data: data,
     })
-  }
+  },
+    // 获取文档详情
+  _GetDocumentDetail: (id: any) => {
+    return axios({
+      method: 'get',
+      url: `/cloud-document/${id}`,
+    })
+  },
+  // 获取文档权限
+  _GetDocumentPermission: (id: any) => {
+    return axios({
+      method: 'get',
+      url: `/documents/${id}/collaborators`,
+    })
+  },
+  // 获取白板详情
+  _GetWhiteboardDetail: (id: any) => {
+    return axios({
+      method: 'get',
+      url: `/whiteboard/${id}`,
+    })
+  },
 }

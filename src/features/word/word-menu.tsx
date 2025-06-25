@@ -39,9 +39,12 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { DocumentActionDialog } from './components/option'
+import { ActionBar } from './components/wordMenu-components/ActionBar'
+import { PathNavigator } from './components/wordMenu-components/PathNavigator'
+import { PermissionDialog } from './components/wordMenu-components/PermissionDialog'
 import Request from './request'
 
-interface Document {
+export interface Document {
   updatedAt: any
   ownerEmail: any
   id: string
@@ -128,11 +131,6 @@ export default function WordMenu() {
   }
 
   const [documents, setDocuments] = useState<Document[]>([])
-  // const [allFiles, setAllFiles] = useState<any>([])
-  // useEffect(() => {
-  //   console.log('documents', documents)
-  // }, [documents])
-
   const handleDisabled = (items: any) => {
     const permissions = items.map((file: any) => file.permissions) || []
     const formatArray: any = []
@@ -179,7 +177,6 @@ export default function WordMenu() {
 
   const getDocuments = async () => {
     const res = await Request._GetDocument()
-    // const data = res.data
     const treeData = buildDocumentTree(res.data)
     setDocuments(treeData)
   }
@@ -449,89 +446,20 @@ export default function WordMenu() {
           <div className='flex flex-1 flex-col'>
             {/* 操作按钮 */}
             <div className='flex items-center justify-between border-b px-4 pb-4'>
-              <div className='flex items-center gap-2'>
-                <Button
-                  size='lg'
-                  className='border-gray-400 text-[1rem]'
-                  variant='outline'
-                  onClick={() => {
-                    setIsDialogOpen(true)
-                  }}
-                >
-                  <Plus size={30} className='mr-1 border-gray-400' />
-                  新建
-                </Button>
-
-                <DocumentActionDialog
-                  open={isDialogOpen}
-                  documents={documents}
-                  onOpenChange={setIsDialogOpen}
-                  onClose={() => {
-                    const firstFolder = documents.find(
-                      (doc) => doc.type === 'folder'
-                    )
-                    if (firstFolder) {
-                      setSelectedDocument(firstFolder.id)
-                    }
-                  }}
-                  onSuccess={() => {
-                    getDocuments()
-                  }}
-                  parentId={selectedDocument ?? undefined}
-                />
-                <Button
-                  size='lg'
-                  variant='outline'
-                  className='border-gray-400 text-[1rem]'
-                >
-                  <Upload size={24} className='mr-1' />
-                  上传
-                </Button>
-                <Button
-                  size='lg'
-                  variant='outline'
-                  className='border-gray-400 text-[1rem]'
-                >
-                  模板库
-                </Button>
-              </div>
-              {/* 当前路径显示 */}
-              <div className='ml-4 flex items-center gap-1 text-sm'>
-                {currentPath.length > 0 && (
-                  <>
-                    <span
-                      className='cursor-pointer hover:text-blue-500'
-                      onClick={() => {
-                        setCurrentPath([])
-                        setCurrentDocuments(documents)
-                      }}
-                    >
-                      根目录
-                    </span>
-                    {currentPath.map((folder, index) => (
-                      <span key={folder.id}>
-                        <span className='mx-1'>/</span>
-                        <span
-                          className='cursor-pointer hover:text-blue-500'
-                          onClick={() => {
-                            setCurrentPath(currentPath.slice(0, index + 1))
-                            setCurrentDocuments(
-                              index === 0
-                                ? documents.find((d) => d.id === folder.id)
-                                    ?.children || []
-                                : currentPath[index - 1].children?.find(
-                                    (d) => d.id === folder.id
-                                  )?.children || []
-                            )
-                          }}
-                        >
-                          {folder.name}
-                        </span>
-                      </span>
-                    ))}
-                  </>
-                )}
-              </div>
+              <ActionBar
+                setSelectedDocument={setSelectedDocument}
+                isDialogOpen={isDialogOpen}
+                setIsDialogOpen={setIsDialogOpen}
+                documents={documents}
+                selectedDocument={selectedDocument}
+                getDocuments={getDocuments}
+              />
+              <PathNavigator
+                currentPath={currentPath}
+                documents={documents}
+                setCurrentPath={setCurrentPath}
+                setCurrentDocuments={setCurrentDocuments}
+              />
             </div>
 
             {/* 文档列表 */}
@@ -653,196 +581,22 @@ export default function WordMenu() {
         </div>
 
         {/* 权限编辑弹窗 */}
-        <Dialog
+        <PermissionDialog
           open={isPermissionDialogOpen}
           onOpenChange={setIsPermissionDialogOpen}
-        >
-          <DialogContent className='sm:max-w-[600px]'>
-            <DialogHeader>
-              <DialogTitle>编辑文档权限</DialogTitle>
-            </DialogHeader>
-            <div className='space-y-4 py-2'>
-              <div>
-                <h4 className='mb-2 text-sm font-medium'>
-                  当前文档: {currentEditingDoc?.name}
-                </h4>
-
-                {/* 协作者列表 */}
-                <div className={`mb-4 space-y-2`}>
-                  <h4 className='py-2 text-sm font-medium'>所有者</h4>
-                  <div className='space-between flex items-center gap-3'>
-                    <Avatar className='z-1 size-10'>
-                      <AvatarImage
-                        src={''}
-                        alt={userInfo.username || userInfo.email}
-                      />
-                      <AvatarFallback className='bg-[#2CB0C8]'>
-                        {`${userInfo.firstName?.substring(0, 1)}${userInfo.lastName?.substring(0, 1)}` ||
-                          userInfo.email?.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>{userInfo.email}</div>
-                  </div>
-                  {}
-                  <h4 className='py-2 text-sm font-medium'>协作者</h4>
-                  {currentEditingDoc?.collaborators?.length ? (
-                    <div className='space-y-2'>
-                      {currentEditingDoc.collaborators.map(
-                        (collaborator: any) => (
-                          <div
-                            key={collaborator.email}
-                            className='flex items-center justify-between rounded border p-2'
-                          >
-                            <Avatar className='z-1 size-10'>
-                              <AvatarImage src={''} alt={collaborator.email} />
-                              <AvatarFallback className='bg-[#2CB0C8]'>
-                                {`${collaborator.firstName?.substring(0, 1)}${collaborator.lastName?.substring(0, 1)}` ||
-                                  collaborator.email
-                                    ?.substring(0, 2)
-                                    .toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{collaborator.email}</span>
-                            <div className='flex items-center gap-2'>
-                              <Select
-                                value={collaborator.permission}
-                                disabled={
-                                  !(
-                                    currentEditingDoc?.collaborators?.find(
-                                      (item) => item.email === email
-                                    )?.permission === 'ADMIN' ||
-                                    currentEditingDoc?.ownerEmail === email
-                                  )
-                                }
-                                onValueChange={(
-                                  value: 'VIEW' | 'EDIT' | 'ADMIN'
-                                ) => {
-                                  setCurrentEditingDoc((prev) => ({
-                                    ...prev!,
-                                    collaborators:
-                                      prev?.collaborators?.map((c) =>
-                                        c.email === collaborator.email
-                                          ? { ...c, permission: value }
-                                          : c
-                                      ) || [],
-                                  }))
-                                  handleSavePermissions({
-                                    email: collaborator.email,
-                                    permission: value,
-                                  })
-                                }}
-                              >
-                                <SelectTrigger className='w-[120px]'>
-                                  <SelectValue placeholder='选择权限' />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value='VIEW'>查看</SelectItem>
-                                  <SelectItem value='EDIT'>编辑</SelectItem>
-                                  <SelectItem value='ADMIN'>管理</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                variant='ghost'
-                                size='sm'
-                                disabled={
-                                  !(
-                                    currentEditingDoc?.collaborators?.find(
-                                      (item) => item.email === email
-                                    )?.permission === 'ADMIN' ||
-                                    currentEditingDoc?.ownerEmail === email
-                                  )
-                                }
-                                onClick={() =>
-                                  handleRemoveCollaborator(collaborator.email)
-                                }
-                              >
-                                <X className='h-4 w-4' />
-                              </Button>
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className='text-sm text-gray-500'>暂无协作者</p>
-                  )}
-                </div>
-
-                {/* 添加新协作者 */}
-                {(currentEditingDoc?.collaborators?.find(
-                  (item) => item.email === email
-                )?.permission === 'ADMIN' ||
-                  currentEditingDoc?.ownerEmail === email) && (
-                  <div className='space-y-2'>
-                    <h4 className='text-sm font-medium'>添加协作者</h4>
-                    <div className='flex gap-2'>
-                      <Select
-                        value={newCollaboratorEmail}
-                        onValueChange={setNewCollaboratorEmail}
-                      >
-                        <SelectTrigger className='w-[300px]'>
-                          <SelectValue placeholder='选择用户' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {users.map((user: any) => (
-                            <SelectItem
-                              key={user.id}
-                              value={user.email}
-                              disabled={filteredUsers.some(
-                                (u) => u.email === user.email
-                              )}
-                              className={
-                                filteredUsers.some(
-                                  (u) => u.email === user.email
-                                )
-                                  ? 'notselected'
-                                  : ''
-                              }
-                            >
-                              {user.username || user.email}
-                              {filteredUsers.some(
-                                (u) => u.email === user.email
-                              ) ? (
-                                <IconCircleDashedCheck className='text-green-500' />
-                              ) : (
-                                <></>
-                              )}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={newCollaboratorPermission}
-                        onValueChange={(value: 'VIEW' | 'EDIT' | 'ADMIN') =>
-                          setNewCollaboratorPermission(value)
-                        }
-                      >
-                        <SelectTrigger className='w-[120px]'>
-                          <SelectValue placeholder='选择权限' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='VIEW'>查看</SelectItem>
-                          <SelectItem value='EDIT'>编辑</SelectItem>
-                          <SelectItem value='ADMIN'>管理</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button onClick={handleAddCollaborator}>添加</Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* <div className='flex justify-end gap-2'> */}
-            {/* <Button
-                variant='outline'
-                onClick={() => setIsPermissionDialogOpen(false)}
-              >
-                取消
-              </Button> */}
-            {/* <Button onClick={handleSavePermissions}>保存</Button> */}
-            {/* </div> */}
-          </DialogContent>
-        </Dialog>
+          currentEditingDoc={currentEditingDoc}
+          userInfo={userInfo}
+          filteredUsers={filteredUsers}
+          users={users}
+          email={email}
+          handleSavePermissions={handleSavePermissions}
+          handleRemoveCollaborator={handleRemoveCollaborator}
+          newCollaboratorEmail={newCollaboratorEmail}
+          setNewCollaboratorEmail={setNewCollaboratorEmail}
+          newCollaboratorPermission={newCollaboratorPermission}
+          setNewCollaboratorPermission={setNewCollaboratorPermission}
+          handleAddCollaborator={handleAddCollaborator}
+        />
       </Main>
     </div>
   )

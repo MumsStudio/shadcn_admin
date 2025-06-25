@@ -17,8 +17,8 @@ export const CardHeaderInfo = ({ card, onEdit }: CardHeaderInfoProps) => {
           <Badge variant={card.status === '已完成' ? 'default' : 'secondary'}>
             {card.status}
           </Badge>
-          <Badge variant={card.priority === '高' ? 'destructive' : 'outline'}>
-            {card.priority}优先级
+          <Badge variant={card.priority === '重要紧急' ? 'destructive' : 'outline'}>
+            {card.priority}
           </Badge>
           <span className='text-muted-foreground text-sm'>
             截止日期: {card.dueDate}

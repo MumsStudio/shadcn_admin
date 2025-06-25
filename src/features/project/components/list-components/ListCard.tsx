@@ -1,3 +1,4 @@
+import { AvatarImage } from '@radix-ui/react-avatar'
 import {
   Edit,
   MoreVertical,
@@ -7,6 +8,7 @@ import {
   Plus,
 } from 'lucide-react'
 import { Droppable, Draggable } from 'react-beautiful-dnd'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -52,9 +54,29 @@ export const ListCard = ({
           {...provided.droppableProps}
           className='w-72 flex-shrink-0'
         >
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 p-4'>
-              <CardTitle className='text-sm font-medium'>{list.name}</CardTitle>
+          <Card className='gap-1'>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 p-4 py-2'>
+              <CardTitle className='text-sm font-medium '>
+                <div>{list.name}</div>
+                <span className='text-muted-foreground text-xs'>
+                  {list.owner}
+                </span>
+                <div className='flex pt-1'>
+                  {list.listmembers.map((user: any) => (
+                    <div key={user.email} className='px-1'>
+                      <Avatar className='z-1 size-10'>
+                        <AvatarImage
+                          src={''}
+                          alt={user.username || user.email}
+                        />
+                        <AvatarFallback className='bg-[#2CB0C8]'>
+                          {user.email.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  ))}
+                </div>
+              </CardTitle>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant='ghost' size='sm'>

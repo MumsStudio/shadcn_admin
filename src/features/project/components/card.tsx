@@ -27,6 +27,8 @@ import { CardHeaderInfo } from './card-component/CardHeaderInfo'
 import { CardImages } from './card-component/CardImages'
 import { CardMembers } from './card-component/CardMembers'
 import ChecklistModule from './card-component/ChecklistModule'
+import LabelsModule from './card-component/LabelsModule'
+import LinksModule from './card-component/LinksModule'
 
 export default function CardDetail() {
   const [card, setCard] = useState<any>({})
@@ -44,17 +46,23 @@ export default function CardDetail() {
     if (data) {
       setMembers(data.listmembers || [])
       setCards(data.cards)
+      console.log('data', data.cards)
       data.cards.find((c: any) => {
         if (c.id === cardId) {
+          setCard({
+            ...c,
+            status: c.status || '待处理',
+            priority: c.priority || '不重要不紧急',
+            members: c.members || [],
+            comments: c.comments || [],
+          })
           if (c.status) {
             setStatus(c.status)
           }
           if (c.members) {
             setCard({
               ...c,
-              status,
               members: c.members || [],
-              comments: card.comments || [],
             })
           }
         }
@@ -84,6 +92,13 @@ export default function CardDetail() {
 
   const saveCardChanges = () => {
     setCard(editedCard)
+    const newCards = cards.map((c: any) => {
+      if (c.id === cardId) {
+        return editedCard
+      }
+      return c
+    })
+    updateCard({ cards: newCards })
     setEditDialogOpen(false)
   }
 
@@ -137,17 +152,74 @@ export default function CardDetail() {
                     onChange={(items, action) => {
                       setCard({
                         ...card,
-                        modules: {
-                          ...card.modules,
-                          checklist: items,
-                        },
+                        checklist: items,
                       })
+                      const updatedCards = cards.map((c: any) => {
+                        if (c.id === cardId) {
+                          return {...c, checklist: items || [] }
+                        }
+                        return c
+                      })
+                      updateCard({ cards: updatedCards })
                     }}
                   />
                 </div>
               </div>
 
-              <CardComments card={card} setCard={setCard} />
+              <div>
+                <h3 className='mb-2 text-sm font-medium'>标签</h3>
+                <LabelsModule
+                  currentCard={card}
+                  onChange={(items, action) => {
+                    setCard({
+                      ...card,
+                      labels: items,
+                    })
+                    const updatedCards = cards.map((c: any) => {
+                      if (c.id === cardId) {
+                        return { ...c, labels: items || [] }
+                      }
+                      return c
+                    })
+                    updateCard({ cards: updatedCards })
+                  }}
+                />
+              </div>
+              <div>
+                <LinksModule
+                  currentCard={card}
+                  onChange={(links, action) => {
+                    setCard({
+                      ...card,
+                    })
+                  }}
+                  onUpdateCard={(data: any) => {
+                    console.log('data', data)
+                    const updatedCards = cards.map((c: any) => {
+                      if (c.id === cardId) {
+                        return { ...c, links: data.links || [] }
+                      }
+                      return c
+                    })
+                    // console.log('updatedCards', updatedCards)
+                    updateCard({ cards: updatedCards })
+                  }}
+                />
+              </div>
+
+              <CardComments
+                card={card}
+                setCard={setCard}
+                onUpdate={(data: any) => {
+                  const updatedCards = cards.map((c: any) => {
+                    if (c.id === cardId) {
+                      return { ...c, comments: data || [] }
+                    }
+                    return c
+                  })
+                  updateCard({ cards: updatedCards })
+                }}
+              />
             </CardContent>
           </Card>
         </div>

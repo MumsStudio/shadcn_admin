@@ -25,3 +25,12 @@ export const formatDate = (dateStr: string) => {
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+export function getChanges<T extends Record<string, any>>(oldObj: T, newObj: T) {
+  return Object.keys(newObj).reduce((acc, key) => {
+    if (oldObj[key] !== newObj[key]) {
+      acc[key] = { old: oldObj[key], new: newObj[key] };
+    }
+    return acc;
+  }, {} as Record<string, { old: any; new: any }>);
+}

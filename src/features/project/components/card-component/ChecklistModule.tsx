@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from 'react'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import React, { useEffect, useState } from 'react';
+import { IconTrash, IconPlus } from '@tabler/icons-react';
+
 
 interface ChecklistModuleProps {
   onChange: (data: any, action: string) => void
-  currentCard: {
-    modules?: {
-      checklist?: any[]
-    }
-  }
+  currentCard: any
 }
 
 const ChecklistModule: React.FC<ChecklistModuleProps> = ({
@@ -19,7 +16,7 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({
   const [items, setItems] = useState<{ name: string; checked: boolean }[]>([])
 
   useEffect(() => {
-    const checklist = currentCard?.modules?.checklist || []
+    const checklist = currentCard?.checklist || []
     setItems(
       Array.isArray(checklist)
         ? checklist.map((item) =>
@@ -27,7 +24,7 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({
           )
         : []
     )
-  }, [currentCard?.modules])
+  }, [currentCard?.checklist])
 
   const progress =
     items.length > 0
@@ -65,7 +62,7 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({
                 ...newItems[index],
                 checked: e.target.checked,
               }
-              setItems(newItems)
+              // setItems(newItems)
               onChange(
                 newItems,
                 `任务${e.target.checked ? '完成' : '未完成'}: ${newItems[index].name}`
@@ -80,7 +77,7 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({
               className='invisible text-red-500 group-hover:visible hover:text-red-700'
               onClick={() => {
                 const newItems = items.filter((_, i) => i !== index)
-                setItems(newItems)
+                // setItems(newItems)
                 onChange(newItems, `删除任务: ${item.name}`)
               }}
             >
@@ -96,7 +93,7 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({
           onClick={() => setShowAdd(true)}
         >
           <IconPlus className='h-4 w-4' />
-          添加项目
+          添加任务
         </button>
       )}
 
@@ -115,7 +112,7 @@ const ChecklistModule: React.FC<ChecklistModuleProps> = ({
               onClick={() => {
                 if (!newItem.trim()) return
                 const newItems = [...items, { name: newItem, checked: false }]
-                setItems(newItems)
+                // setItems(newItems)
                 setNewItem('')
                 setShowAdd(false)
                 onChange(newItems, `添加任务: ${newItem}`)

@@ -1,11 +1,21 @@
+import { IconPlus, IconCircleDashedCheck } from '@tabler/icons-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { IconPlus, IconCircleDashedCheck } from '@tabler/icons-react'
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface NewListFormProps {
   open: boolean
@@ -107,7 +117,7 @@ export const NewListForm = ({
           )}
           <Label htmlFor='title'>协作者</Label>
           <div className='module-content flex flex-col'>
-            {teamMember && teamMember.length > 0 ? (
+            {teamMember && teamMember.filter((c) => c.email !== ListOwner).length > 0 ? (
               <div className='member-list flex flex-wrap items-center gap-2'>
                 {selectedMember.map((user) => (
                   <div key={user.email} className='relative'>
@@ -145,27 +155,31 @@ export const NewListForm = ({
                     <SelectValue placeholder='选择成员' />
                   </SelectTrigger>
                   <SelectContent className='z-100000'>
-                    {teamMember.map((user: any) => (
-                      <SelectItem
-                        key={user.id}
-                        value={user.email}
-                        disabled={selectedMember.some(
-                          (u) => u.email === user.email
-                        )}
-                        className={
-                          selectedMember.some((u) => u.email === user.email)
-                            ? 'notselected'
-                            : ''
-                        }
-                      >
-                        {user.username || user.email}
-                        {selectedMember.some((u) => u.email === user.email) ? (
-                          <IconCircleDashedCheck className='text-green-500' />
-                        ) : (
-                          <></>
-                        )}
-                      </SelectItem>
-                    ))}
+                    {teamMember
+                      .filter((c) => c.email !== ListOwner)
+                      .map((user: any) => (
+                        <SelectItem
+                          key={user.id}
+                          value={user.email}
+                          disabled={selectedMember.some(
+                            (u) => u.email === user.email
+                          )}
+                          className={
+                            selectedMember.some((u) => u.email === user.email)
+                              ? 'notselected'
+                              : ''
+                          }
+                        >
+                          {user.username || user.email}
+                          {selectedMember.some(
+                            (u) => u.email === user.email
+                          ) ? (
+                            <IconCircleDashedCheck className='text-green-500' />
+                          ) : (
+                            <></>
+                          )}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

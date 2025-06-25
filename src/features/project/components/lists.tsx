@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { DragDropContext } from 'react-beautiful-dnd'
 import { useAuthStore } from '@/stores/authStore'
+import { getChanges } from '@/utils/common'
 import { showErrorData, showSuccessData } from '@/utils/show-submitted-data'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/header'
@@ -43,12 +44,16 @@ export default function ListManagement() {
   const [teamMember, setTeamMember] = useState<any[]>([])
   const [selectedMember, setSelectedMember] = useState<any[]>([])
   const [isTransferring, setIsTransferring] = useState(false)
-  const [ListOwner, setListOwner] = useState<any>(email)
+  const [ListOwner, setListOwner] = useState<any>('')
+  const navigate = useNavigate()
+  const [activities, setActivities] = useState<any[]>([])
   const [showSelect, setShowSelect] = useState(false)
+  const [team, setTeam] = useState<any>([])
 
   const { projectId, id: teamId } = Route.useParams()
   useEffect(() => {
     getTeamList()
+    fetchProjectInfo()
   }, [])
   useEffect(() => {
     if (dialogOpen === false) {
@@ -65,24 +70,50 @@ export default function ListManagement() {
       setEditCard({})
     }
   }, [cardDialogOpen])
+  const updateProject = async (data: any) => {
+    const res = await Request._UpdateProject(projectId, data)
+    if (res.data) {
+      getTeamList()
+    } else {
+      showErrorData('修改项目失败')
+      console.error(res)
+    }
+  }
   const getTeamList = async () => {
     const res = await Request._GetTeamlists(projectId, teamId)
     const { data } = res
     if (data) {
-      console.log('lists', data)
       const TeamMembers = data.members || []
-      const getTeanMember = TeamMembers.filter((u: any) => u.email !== email)
-      setTeamMember(getTeanMember)
+      setTeamMember(TeamMembers)
       setLists(data.lists)
+      setTeam(data)
     } else {
+      navigate({ to: `/404` })
       console.log('error', res)
       showErrorData(res.error)
     }
   }
-  const navigate = useNavigate()
   const { history } = useRouter()
   const toggleInput = () => {
     setShowSelect(!showSelect)
+  }
+  const fetchProjectInfo = async () => {
+    try {
+      const res = await Request._GetProjectDetail(projectId)
+      const { data } = res
+      if (data.errCode === 403) {
+        showErrorData(res.message)
+        navigate({ to: `/403` })
+        return
+      }
+      const activitiesData = data.activities.map((activity: any) => ({
+        ...activity,
+        date: new Date(activity.date).toLocaleString(),
+      }))
+      setActivities(activitiesData)
+    } catch (error) {
+      console.error('Error fetching project info:', error)
+    }
   }
   const createNewList = async () => {
     if (!newListTitle.trim()) return
@@ -98,6 +129,18 @@ export default function ListManagement() {
     if (data) {
       getTeamList()
       showSuccessData('创建成功')
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '创建清单',
+            description: `在小队 ${team?.name || ''} 下创建了清单 ${newListTitle}`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
     } else {
       console.log('error', res)
       showErrorData(res.error)
@@ -110,6 +153,20 @@ export default function ListManagement() {
     if (data) {
       getTeamList()
       showSuccessData('更新成功')
+      const changes = getChanges(team, listData)
+      console.log('changes', changes)
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '移动卡片',
+            description: `在小队 ${team?.name || ''} 下移动了卡片`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
     } else {
       console.log('error', res)
       showErrorData(res.error)
@@ -124,6 +181,32 @@ export default function ListManagement() {
     const res = await Request._UpdateList(teamId, newList, listId)
     const { data } = res
     if (data) {
+      const changes = getChanges(team, newList)
+      console.log('changes', changes)
+      let changeDescription = ''
+      const fieldChanges = [
+        { field: 'name', label: '清单名称', verb: '修改为' },
+        { field: 'description', label: '清单描述', verb: '修改为' },
+        { field: 'owner', label: '负责人', verb: '变更为' },
+        { field: 'cards', label: '卡片', verb: '新增' },
+      ]
+      fieldChanges.forEach(({ field, label, verb }) => {
+        if (changes[field]) {
+          changeDescription += `${label}${verb}"${changes[field].new}"\n`
+        }
+      })
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '修改清单',
+            description: changeDescription,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
       getTeamList()
       showSuccessData('更新成功')
     } else {
@@ -216,6 +299,18 @@ export default function ListManagement() {
     const { list } = confirmDialog
     const res = await Request._DeleteList(teamId, list.id)
     if (res.data) {
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '删除清单',
+            description: `在小队 ${team?.name || ''} 下删除清单 ${team.lists.find((item: any) => item.id === list.id).name}`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
       showSuccessData('删除成功')
       getTeamList()
     } else {
@@ -234,6 +329,18 @@ export default function ListManagement() {
     const res = await Request._CreateList(teamId, newList)
     if (res.data) {
       showSuccessData('复制成功')
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '复制清单',
+            description: `在小队 ${team?.name || ''} 下复制清单 ${list.name}`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
       getTeamList()
     } else {
       showErrorData(res.error)

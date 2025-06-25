@@ -73,7 +73,6 @@ export default function Word() {
   }, [content])
   useEffect(() => {
     return () => {
-      // 组件卸载时释放provider
       releaseProvider(id)
     }
   }, [id])
@@ -224,35 +223,40 @@ export default function Word() {
     // 在编辑器初始化后调用
     setupVideoResizing()
     const updateHeadingLevel = () => {
-      if (editor.isActive('heading', { level: 1 })) {
-        setHeadingLevel('1')
-      } else if (editor.isActive('heading', { level: 2 })) {
-        setHeadingLevel('2')
-      } else if (editor.isActive('heading', { level: 3 })) {
-        setHeadingLevel('3')
-      } else {
-        setHeadingLevel('p')
-      }
+      const headingLevels = [
+        { level: 1, value: '1' as const },
+        { level: 2, value: '2' as const },
+        { level: 3, value: '3' as const },
+      ]
+
+      const matchedLevel = headingLevels.find(({ level }) =>
+        editor.isActive('heading', { level })
+      )
+      setHeadingLevel(matchedLevel ? matchedLevel.value : 'p')
     }
+
     const updateListType = () => {
-      if (editor.isActive('bulletList')) {
-        setListType('ul')
-      } else if (editor.isActive('orderedList')) {
-        setListType('ol')
-      } else {
-        setListType('none')
-      }
+      const listTypes = [
+        { type: 'bulletList', value: 'ul' as const },
+        { type: 'orderedList', value: 'ol' as const },
+      ]
+
+      const matchedType = listTypes.find(({ type }) => editor.isActive(type))
+      setListType(matchedType ? matchedType.value : 'none')
     }
+
     const updateAlignType = () => {
-      if (editor.isActive({ textAlign: 'left' })) {
-        setAlignType('left')
-      } else if (editor.isActive({ textAlign: 'center' })) {
-        setAlignType('center')
-      } else if (editor.isActive({ textAlign: 'right' })) {
-        setAlignType('right')
-      } else if (editor.isActive({ textAlign: 'justify' })) {
-        setAlignType('justify')
-      }
+      const alignTypes = [
+        { align: 'left', value: 'left' as const },
+        { align: 'center', value: 'center' as const },
+        { align: 'right', value: 'right' as const },
+        { align: 'justify', value: 'justify' as const },
+      ]
+
+      const matchedAlign = alignTypes.find(({ align }) =>
+        editor.isActive({ textAlign: align })
+      )
+      setAlignType(matchedAlign ? matchedAlign.value : 'left')
     }
 
     updateHeadingLevel()

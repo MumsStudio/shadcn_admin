@@ -1,67 +1,27 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useRouter } from '@tanstack/react-router'
-import { IconCircleDashedCheck } from '@tabler/icons-react'
-import { Route } from '@/routes/_authenticated/project/detail.$id'
-import {
-  ChevronLeft,
-  Edit,
-  Plus,
-  Users,
-  MoreVertical,
-  Trash2,
-  Activity,
-  User,
-} from 'lucide-react'
-import { useAuthStore } from '@/stores/authStore'
-import { showErrorData, showSuccessData } from '@/utils/show-submitted-data'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import Request from '../request'
-import TeamManagement from './team'
-import { EditProjectDialog } from './ui/dialog'
-import {
-  Timeline,
-  TimelineItem,
-  TimelineContent,
-  TimelineDot,
-  TimelineSeparator,
-  TimelineConnector,
-} from './ui/timeline'
+import { useEffect, useState } from 'react';
+import { useNavigate, useRouter } from '@tanstack/react-router';
+import { IconCircleDashedCheck } from '@tabler/icons-react';
+import { Route } from '@/routes/_authenticated/project/detail.$id';
+import { ChevronLeft, Edit, Plus, Users, MoreVertical, Trash2, Activity, User } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import { getChanges } from '@/utils/common';
+import { showErrorData, showSuccessData } from '@/utils/show-submitted-data';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Header } from '@/components/layout/header';
+import { Main } from '@/components/layout/main';
+import Request from '../request';
+import TeamManagement from './team';
+import { EditProjectDialog } from './ui/dialog';
+import { Timeline, TimelineItem, TimelineContent, TimelineDot, TimelineSeparator, TimelineConnector } from './ui/timeline';
+
 
 type Member = {
   id: string
@@ -102,6 +62,15 @@ export default function ProjectOverview() {
   useEffect(() => {
     fetchUsers()
   }, [memberDialogOpen === true])
+  const updateProject = async (data: any) => {
+    const res = await Request._UpdateProject(id, data)
+    if (res.data) {
+      fetchProjectInfo()
+    } else {
+      showErrorData('修改项目失败')
+      console.error(res)
+    }
+  }
   const fetchProjectInfo = async () => {
     try {
       const res = await Request._GetProjectDetail(id)
@@ -158,6 +127,18 @@ export default function ProjectOverview() {
     if (res.data) {
       fetchProjectInfo()
       showSuccessData('添加成员成功')
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '添加成员',
+            description: `${newMember.email} 作为 ${roleLabels[newMember.role]} 加入项目`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
     } else {
       showErrorData('添加成员失败')
       console.error(res)
@@ -180,6 +161,18 @@ export default function ProjectOverview() {
     if (res.data) {
       fetchProjectInfo()
       showSuccessData('编辑成员成功')
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '编辑成员',
+            description: `修改 ${editMemberData.email} 为 ${roleLabels[editMemberData.role]} `,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
     } else {
       showErrorData('编辑成员失败')
       console.error(res)
@@ -195,6 +188,18 @@ export default function ProjectOverview() {
       } else {
         fetchProjectInfo()
         showSuccessData('删除成员成功')
+        updateProject({
+          activities: [
+            ...activities,
+            {
+              id: Date.now(),
+              action: '删除成员',
+              description: `${members.find((member: any) => member.id === MemberId)?.email}`,
+              date: Date.now(),
+              user: email,
+            },
+          ],
+        })
       }
     } else {
       showErrorData('删除成员失败')
@@ -216,6 +221,18 @@ export default function ProjectOverview() {
     if (res.data) {
       fetchProjectInfo()
       showSuccessData('创建团队成功')
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '创建小队',
+            description: `${name}，负责人为 ${owner}`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
     } else {
       showErrorData('创建团队失败')
       console.error(res)
@@ -227,6 +244,18 @@ export default function ProjectOverview() {
     if (res.data) {
       fetchProjectInfo()
       showSuccessData('删除团队成功')
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '删除小队',
+            description: `${teams.find((team: any) => team.id === teamId)?.name}`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
     } else {
       showErrorData('删除团队失败')
       console.error(res)
@@ -244,12 +273,42 @@ export default function ProjectOverview() {
       description: description,
       owner: owner,
     }
+    const oldTeam = teams.find((team: any) => team.id === editTeam.id)
+    const changes = getChanges(oldTeam, updateTeam)
+    let changeDescription = ''
+    const fieldChanges = [
+      { field: 'name', label: '小队名称', verb: '修改为' },
+      { field: 'description', label: '小队描述', verb: '修改为' },
+      { field: 'owner', label: '小队负责人', verb: '变更为' },
+    ]
+
+    fieldChanges.forEach(({ field, label, verb }) => {
+      if (changes[field]) {
+        changeDescription += `${label}从"${changes[field].old}"${verb}"${changes[field].new}"\n`
+      }
+    })
+
+    if (!changeDescription) {
+      changeDescription = '小队信息未发生变化'
+    }
     const res = await Request._UpdateProjectTeam(id, updateTeam, editTeam.id)
     if (res.data) {
       fetchProjectInfo()
-      showSuccessData('编辑团队成功')
+      showSuccessData('编辑小队成功')
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '编辑小队',
+            description: changeDescription,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
     } else {
-      showErrorData('编辑团队失败')
+      showErrorData('编辑小队失败')
       console.error(res)
     }
     setTeamDialogOpen(false)
@@ -264,6 +323,18 @@ export default function ProjectOverview() {
     const res = await Request._UpdateProjectTeam(id, updateTeam, team.id)
     if (res.data) {
       fetchProjectInfo()
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '添加小队成员',
+            description: `${addTeamMembers?.email}`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
       showSuccessData('添加团队成员成功')
     } else {
       showErrorData('添加团队成员失败')
@@ -286,7 +357,6 @@ export default function ProjectOverview() {
         (listmember: any) => listmember.email === member.email
       )
     )
-    console.log(deleteListMembers)
     if (deleteListMembers) {
       showErrorData('小组成员已分配任务，不能删除')
       return
@@ -297,6 +367,18 @@ export default function ProjectOverview() {
     const res = await Request._UpdateProjectTeam(id, updateTeam, team.id)
     if (res.data) {
       fetchProjectInfo()
+      updateProject({
+        activities: [
+          ...activities,
+          {
+            id: Date.now(),
+            action: '删除小队',
+            description: `${teams.find((team: any) => team.id === team.id)?.name}`,
+            date: Date.now(),
+            user: email,
+          },
+        ],
+      })
       showSuccessData('删除团队成员成功')
     } else {
       showErrorData('删除团队成员失败')
@@ -312,8 +394,37 @@ export default function ProjectOverview() {
     )
   }
   const handleEditProject = async (data: any) => {
-    console.log(data)
-    const res = await Request._UpdateProject(id, data)
+    const formatData = {
+      ...data,
+      deadline: new Date(data.deadline).toLocaleDateString(),
+    }
+    const changes = getChanges(projectInfo, formatData)
+    let changeDescription = ''
+    const fieldChanges = [
+      { field: 'name', label: '项目名称', verb: '修改为' },
+      { field: 'description', label: '项目描述', verb: '修改为' },
+      { field: 'deadline', label: '截止日期', verb: '变更为' },
+      { field: 'status', label: '项目状态', verb: '变更为' },
+    ]
+    fieldChanges.forEach(({ field, label, verb }) => {
+      if (changes[field]) {
+        changeDescription += `${label}${verb}"${changes[field].new}"\n`
+      }
+    })
+    const newData = {
+      ...data,
+      activities: [
+        ...activities,
+        {
+          id: Date.now(),
+          action: '修改项目信息',
+          description: changeDescription,
+          date: Date.now(),
+          user: email,
+        },
+      ],
+    }
+    const res = await Request._UpdateProject(id, newData)
     if (res.data) {
       fetchProjectInfo()
       showSuccessData('修改项目成功')
@@ -489,7 +600,7 @@ export default function ProjectOverview() {
               </CardContent>
             </Card>
             {/* 近期活动时间线 */}
-            <Card className='lg:col-span-1'>
+            <Card className='overflow-y-auto lg:col-span-1'>
               <CardHeader>
                 <CardTitle>近期活动</CardTitle>
               </CardHeader>

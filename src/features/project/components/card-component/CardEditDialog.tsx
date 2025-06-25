@@ -87,9 +87,10 @@ export const CardEditDialog = ({
                   <SelectValue placeholder='选择优先级' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='低'>低</SelectItem>
-                  <SelectItem value='中'>中</SelectItem>
-                  <SelectItem value='高'>高</SelectItem>
+                  <SelectItem value='重要紧急'>重要紧急</SelectItem>
+                  <SelectItem value='重要不紧急'>重要不紧急</SelectItem>
+                  <SelectItem value='不重要紧急'>不重要紧急</SelectItem>
+                  <SelectItem value='不重要不紧急'>不重要不紧急</SelectItem>
                 </SelectContent>
               </Select>
             </div>
