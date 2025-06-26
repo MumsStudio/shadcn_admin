@@ -140,7 +140,7 @@ export default {
       data: data,
     })
   },
-    // 获取文档详情
+  // 获取文档详情
   _GetDocumentDetail: (id: any) => {
     return axios({
       method: 'get',
@@ -161,4 +161,11 @@ export default {
       url: `/whiteboard/${id}`,
     })
   },
+  // 关键词搜索
+  _Search: (keyword: any, projectId: any) => {
+    return axios({
+      method: 'get',
+      url: `/projects/search/${keyword}/${projectId}`,
+    })
+  }
 }

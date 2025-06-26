@@ -28,6 +28,7 @@ import { handleHeadingShortcuts } from './components/wordDetail-components/Headi
 import { handleKeyboardShortcuts } from './components/wordDetail-components/KeyboardShortcuts'
 import { Sidebar } from './components/wordDetail-components/Sidebar'
 import Request from './request'
+import { exportToPDF, exportToWord } from './utils/export'
 
 export default function Word() {
   const [findReplaceOpen, setFindReplaceOpen] = useState(false)
@@ -62,8 +63,8 @@ export default function Word() {
   const { id } = Route.useParams()
   let ownerEmail = ''
   useEffect(() => {
-    getDocumentDetail()
     handleReadOnly()
+    getDocumentDetail()
   }, [])
 
   useEffect(() => {
@@ -408,6 +409,23 @@ export default function Word() {
     }
   }
 
+  const handleDownload = async (format: 'word' | 'pdf') => {
+    if (!editor) return
+
+    const htmlContent = editor.getHTML()
+    const title = docTitle || '未命名文档'
+
+    try {
+      if (format === 'word') {
+        await exportToWord(htmlContent, title)
+      } else {
+        await exportToPDF(htmlContent, title)
+      }
+    } catch (error) {
+      console.error('下载失败:', error)
+    }
+  }
+
   return (
     <>
       <Header
@@ -422,6 +440,7 @@ export default function Word() {
         onHistoryClick={() => setShowHistoryPanel(true)}
         onCommentClick={() => setCommentsideBarOpen(!commentsideBarOpen)}
         onFindReplaceClick={() => setFindReplaceOpen(true)}
+        onDownload={handleDownload}
       />
       <Main className='overflow-hidden'>
         {/* 顶部导航栏 */}

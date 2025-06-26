@@ -1,14 +1,20 @@
-import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, Trash2, Edit } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import Request from '../request';
-
+import { ColumnDef } from '@tanstack/react-table'
+import { MoreHorizontal, Trash2, Edit, KeyRound } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import Request from '../request'
 
 export const columns = ({
   getWhiteboards,
+  handleOpenPermissionDialog,
 }: {
   getWhiteboards: () => Promise<void>
+  handleOpenPermissionDialog: (whiteboard: any) => void
 }): ColumnDef<any>[] => [
   {
     accessorKey: 'name',
@@ -63,6 +69,13 @@ export const columns = ({
               }}
             >
               <Edit className='mr-2 h-4 w-4' /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                handleOpenPermissionDialog(whiteboard)
+              }}
+            >
+              <KeyRound className='mr-2 h-4 w-4' /> 权限管理
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleDelete}>
               <Trash2 className='mr-2 h-4 w-4' /> Delete

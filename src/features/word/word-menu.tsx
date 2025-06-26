@@ -1,44 +1,26 @@
 import { useState, useEffect } from 'react'
-// import { useNavigate } from '@tanstack/react-router'
 import {
-  IconCircleDashedCheck,
   IconFolderFilled,
   IconReceipt,
   IconTournament,
 } from '@tabler/icons-react'
-import { FileText, Folder, MoreHorizontal, Plus, Upload } from 'lucide-react'
-import { X } from 'lucide-react'
+import { FileText, Folder, MoreHorizontal, Plus } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { showSuccessData, showErrorData } from '@/utils/show-submitted-data'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Tree } from '@/components/ui/tree'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { DocumentActionDialog } from './components/option'
 import { ActionBar } from './components/wordMenu-components/ActionBar'
 import { PathNavigator } from './components/wordMenu-components/PathNavigator'
 import { PermissionDialog } from './components/wordMenu-components/PermissionDialog'
@@ -53,11 +35,11 @@ export interface Document {
   disabled?: boolean
   parentId?: string
   children?: Document[]
-  collaborators?: Collaborator[]
+  permissions?: Collaborator[]
 }
 
 interface Collaborator {
-  email: string
+  userEmail: string
   permission: 'VIEW' | 'EDIT' | 'ADMIN'
 }
 
@@ -68,7 +50,6 @@ interface User {
 }
 
 export default function WordMenu() {
-  // const navigate = useNavigate()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [sortConfig, setSortConfig] = useState<{
     key: string
@@ -263,29 +244,10 @@ export default function WordMenu() {
         currentEditingDoc?.id
       )
       const { data } = response
-      const CollaboratorData = users
-        .filter((user) => {
-          return data.some((c: any) => c.userEmail === user.email)
-        })
-        .map((user: any) => {
-          return {
-            id: user.id,
-            name: user.name,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            permission: data.find((c: any) => c.userEmail === user.email)
-              ?.permission,
-          }
-        })
-      setFilteredUsers((prev) => [...prev, ...CollaboratorData])
-      setCurrentEditingDoc((prev) => {
-        if (!prev) return null
-        return {
-          ...prev,
-          collaborators: CollaboratorData,
-        }
+      const CollaboratorData = users.filter((user) => {
+        return data.some((c: any) => c.userEmail === user.email)
       })
+      setFilteredUsers((prev) => [...prev, ...CollaboratorData])
     } catch (error) {
       showErrorData(error)
       console.error('Failed to fetch users:', error)
@@ -308,8 +270,8 @@ export default function WordMenu() {
     if (!selectedUser) return
 
     // 检查是否已经是协作者
-    const isAlreadyCollaborator = currentEditingDoc.collaborators?.some(
-      (c) => c.email === selectedUser.email
+    const isAlreadyCollaborator = currentEditingDoc.permissions?.some(
+      (c) => c.userEmail === selectedUser.email
     )
 
     if (isAlreadyCollaborator) {
@@ -318,14 +280,14 @@ export default function WordMenu() {
     }
 
     const newCollaborator = {
-      email: selectedUser.email,
+      userEmail: selectedUser.email,
       permission: newCollaboratorPermission,
     }
 
     // 更新当前编辑文档的协作者列表
     setCurrentEditingDoc((prev) => ({
       ...prev!,
-      collaborators: [...(prev?.collaborators || []), newCollaborator],
+      permissions: [...(prev?.permissions || []), newCollaborator],
     }))
 
     // 清空选择
@@ -353,8 +315,8 @@ export default function WordMenu() {
 
     setCurrentEditingDoc((prev) => ({
       ...prev!,
-      collaborators:
-        prev?.collaborators?.filter((c) => c.email !== email) || [],
+      permissions:
+        prev?.permissions?.filter((c) => c.userEmail !== email) || [],
     }))
 
     // 将被移除的用户重新加入可选用户列表
@@ -367,21 +329,27 @@ export default function WordMenu() {
 
   // 保存权限更改
   const handleSavePermissions = async (newCollaborator: {
-    email: string
+    userEmail: string
     permission: string
   }) => {
     if (!currentEditingDoc) return
 
     const data = {
-      userEmail: newCollaborator.email,
+      userEmail: newCollaborator.userEmail,
       permission: newCollaborator.permission,
     }
-    console.log('currentEditingDoc', data)
-    // return
     try {
       // 调用API更新文档权限
       await Request._SetDocumentPermission(currentEditingDoc.id, data)
-
+      setCurrentEditingDoc((prev: any) => ({
+        ...prev,
+        permissions: prev?.permissions?.map((c: any) => {
+          if (c.userEmail === newCollaborator.userEmail) {
+            return { ...c, permission: newCollaborator.permission }
+          }
+          return c
+        }),
+      }))
       showSuccessData('权限更新成功')
       getDocuments() // 刷新文档列表
     } catch (error) {

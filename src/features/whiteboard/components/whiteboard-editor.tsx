@@ -69,21 +69,21 @@ import '@xyflow/react/dist/style.css'
 import { showSuccessData } from '@/utils/show-submitted-data'
 import Request from '../request'
 import { HistoryPanel } from './HistoryPanel'
-import ArrowNode from './arrow-node'
-import CardNode from './card-node'
-import CircleNode from './circle-node'
-import ExpandableRectangleNode from './expandable-rectangle-node'
-import FlowNode from './flow-node'
-import FormulaNode from './formula-node'
-import ImageNode from './image-node'
-import LineNode from './line-node'
-import PolygonNode from './ploygon-node'
-import RectangleNode from './rectangle-node'
-import StickyNode from './sticky-node'
-import TableNode from './table-node'
-import TextNode from './text-node'
-import TriangleNode from './triangle-node'
-import VideoNode from './video-node'
+import ArrowNode from './custom-node/arrow-node'
+import CardNode from './custom-node/card-node'
+import CircleNode from './custom-node/circle-node'
+import ExpandableRectangleNode from './custom-node/expandable-rectangle-node'
+import FlowNode from './custom-node/flow-node'
+import FormulaNode from './custom-node/formula-node'
+import ImageNode from './custom-node/image-node'
+import LineNode from './custom-node/line-node'
+import PolygonNode from './custom-node/ploygon-node'
+import RectangleNode from './custom-node/rectangle-node'
+import StickyNode from './custom-node/sticky-node'
+import TableNode from './custom-node/table-node'
+import TextNode from './custom-node/text-node'
+import TriangleNode from './custom-node/triangle-node'
+import VideoNode from './custom-node/video-node'
 
 // 定义类型
 type WhiteboardNodeData = {
@@ -341,7 +341,6 @@ function WhiteboardFlow() {
 
   useEffect(() => {
     saveHistory()
-    console.log('saveHistory', nodes, edges)
   }, [nodes, edges])
 
   const undo = useCallback(() => {
@@ -449,6 +448,10 @@ function WhiteboardFlow() {
     const loadWhiteboard = async () => {
       try {
         const res = await Request._GetWhiteboardDetail(id)
+        if (res.data.errCode === 403) {
+          window.location.href = `/403`
+          return
+        }
         if (res.data) {
           console.log(res.data, 'res.data')
           const data = res.data

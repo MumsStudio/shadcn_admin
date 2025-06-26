@@ -7,6 +7,7 @@ import {
   IconSearch,
   IconUser,
   IconStar,
+  IconDownload,
 } from '@tabler/icons-react'
 import { showSuccessData } from '@/utils/show-submitted-data'
 
@@ -22,6 +23,7 @@ export interface HeaderProps {
   onHistoryClick: () => void
   onCommentClick: () => void
   onFindReplaceClick: () => void
+  onDownload: (format: 'word' | 'pdf') => void
 }
 
 export function Header({
@@ -36,8 +38,10 @@ export function Header({
   onHistoryClick,
   onCommentClick,
   onFindReplaceClick,
+  onDownload,
 }: HeaderProps) {
   const [showShareMenu, setShowShareMenu] = useState(false)
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false)
 
   return (
     <div className='sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-4 text-[2rem]'>
@@ -131,6 +135,31 @@ export function Header({
             <IconUser size={18} />
             <span>协作</span>
           </button>
+          <div className='relative'>
+            <button
+              onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+              className='flex items-center space-x-1 rounded p-2 text-gray-600 hover:bg-gray-100'
+            >
+              <IconDownload size={18} />
+              <span>下载</span>
+            </button>
+            {showDownloadMenu && (
+              <div className='absolute right-0 z-10 mt-1 w-40 rounded-md border bg-white shadow-lg'>
+                <button
+                  className='block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100'
+                  onClick={() => onDownload('word')}
+                >
+                  Word格式
+                </button>
+                <button
+                  className='block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100'
+                  onClick={() => onDownload('pdf')}
+                >
+                  PDF格式
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

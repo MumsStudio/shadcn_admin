@@ -1,4 +1,4 @@
-import { IconCircleDashedCheck } from '@tabler/icons-react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Document } from '../../word-menu'
 import {
   Dialog,
   DialogContent,
@@ -17,10 +16,21 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+interface Collaborator {
+  email: string
+  permission: 'VIEW' | 'EDIT' | 'ADMIN'
+}
+
+interface User {
+  id: string
+  email: string
+  name: string
+}
+
 export function PermissionDialog({
   open,
   onOpenChange,
-  currentEditingDoc,
+  currentEditingWhiteboard,
   userInfo,
   filteredUsers,
   users,
@@ -35,7 +45,7 @@ export function PermissionDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  currentEditingDoc: Document | null
+  currentEditingWhiteboard: any
   userInfo: any
   filteredUsers: any[]
   users: any[]
@@ -55,12 +65,12 @@ export function PermissionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-[600px]'>
         <DialogHeader>
-          <DialogTitle>编辑文档权限</DialogTitle>
+          <DialogTitle>编辑白板权限</DialogTitle>
         </DialogHeader>
         <div className='space-y-4 py-2'>
           <div>
             <h4 className='mb-2 text-sm font-medium'>
-              当前文档: {currentEditingDoc?.name}
+              当前白板: {currentEditingWhiteboard?.name}
             </h4>
 
             {/* 协作者列表 */}
@@ -81,67 +91,73 @@ export function PermissionDialog({
               </div>
               {}
               <h4 className='py-2 text-sm font-medium'>协作者</h4>
-              {currentEditingDoc?.permissions?.length ? (
+              {currentEditingWhiteboard?.permissions?.length ? (
                 <div className='space-y-2'>
-                  {currentEditingDoc.permissions.map((collaborator: any) => (
-                    <div
-                      key={collaborator.userEmail}
-                      className='flex items-center justify-between rounded border p-2'
-                    >
-                      <Avatar className='z-1 size-10'>
-                        <AvatarImage src={''} alt={collaborator.userEmail} />
-                        <AvatarFallback className='bg-[#2CB0C8]'>
-                          {collaborator.userEmail?.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{collaborator.userEmail}</span>
-                      <div className='flex items-center gap-2'>
-                        <Select
-                          value={collaborator.permission}
-                          disabled={
-                            !(
-                              currentEditingDoc?.permissions?.find(
-                                (item: any) => item.userEmail === email
-                              )?.permission === 'ADMIN' ||
-                              currentEditingDoc?.ownerEmail === email
-                            )
-                          }
-                          onValueChange={(value: 'VIEW' | 'EDIT' | 'ADMIN') => {
-                            handleSavePermissions({
-                              userEmail: collaborator.userEmail,
-                              permission: value,
-                            })
-                          }}
-                        >
-                          <SelectTrigger className='w-[120px]'>
-                            <SelectValue placeholder='选择权限' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value='VIEW'>查看</SelectItem>
-                            <SelectItem value='EDIT'>编辑</SelectItem>
-                            <SelectItem value='ADMIN'>管理</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          disabled={
-                            !(
-                              currentEditingDoc?.permissions?.find(
-                                (item: any) => item.userEmail === email
-                              )?.permission === 'ADMIN' ||
-                              currentEditingDoc?.ownerEmail === email
-                            )
-                          }
-                          onClick={() =>
-                            handleRemoveCollaborator(collaborator.userEmail)
-                          }
-                        >
-                          <X className='h-4 w-4' />
-                        </Button>
+                  {currentEditingWhiteboard.permissions.map(
+                    (collaborator: any) => (
+                      <div
+                        key={collaborator.userEmail}
+                        className='flex items-center justify-between rounded border p-2'
+                      >
+                        <Avatar className='z-1 size-10'>
+                          <AvatarImage src={''} alt={collaborator.userEmail} />
+                          <AvatarFallback className='bg-[#2CB0C8]'>
+                            {collaborator.userEmail
+                              ?.substring(0, 2)
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{collaborator.userEmail}</span>
+                        <div className='flex items-center gap-2'>
+                          <Select
+                            value={collaborator.permission}
+                            disabled={
+                              !(
+                                currentEditingWhiteboard?.permissions?.find(
+                                  (item: any) => item.userEmail === email
+                                )?.permission === 'ADMIN' ||
+                                currentEditingWhiteboard?.ownerEmail === email
+                              )
+                            }
+                            onValueChange={(
+                              value: 'VIEW' | 'EDIT' | 'ADMIN'
+                            ) => {
+                              handleSavePermissions({
+                                userEmail: collaborator.userEmail,
+                                permission: value,
+                              })
+                            }}
+                          >
+                            <SelectTrigger className='w-[120px]'>
+                              <SelectValue placeholder='选择权限' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='VIEW'>查看</SelectItem>
+                              <SelectItem value='EDIT'>编辑</SelectItem>
+                              <SelectItem value='ADMIN'>管理</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            disabled={
+                              !(
+                                currentEditingWhiteboard?.permissions?.find(
+                                  (item: any) => item.userEmail === email
+                                )?.permission === 'ADMIN' ||
+                                currentEditingWhiteboard?.ownerEmail === email
+                              )
+                            }
+                            onClick={() =>
+                              handleRemoveCollaborator(collaborator.userEmail)
+                            }
+                          >
+                            <X className='h-4 w-4' />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               ) : (
                 <p className='text-sm text-gray-500'>暂无协作者</p>
@@ -149,10 +165,10 @@ export function PermissionDialog({
             </div>
 
             {/* 添加新协作者 */}
-            {(currentEditingDoc?.permissions?.find(
+            {(currentEditingWhiteboard?.permissions?.find(
               (item: any) => item.userEmail === email
             )?.permission === 'ADMIN' ||
-              currentEditingDoc?.ownerEmail === email) && (
+              currentEditingWhiteboard?.ownerEmail === email) && (
               <div className='space-y-2'>
                 <h4 className='text-sm font-medium'>添加协作者</h4>
                 <div className='flex gap-2'>
@@ -171,18 +187,8 @@ export function PermissionDialog({
                           disabled={filteredUsers.some(
                             (u) => u.email === user.email
                           )}
-                          className={
-                            filteredUsers.some((u) => u.email === user.email)
-                              ? 'notselected'
-                              : ''
-                          }
                         >
                           {user.username || user.email}
-                          {filteredUsers.some((u) => u.email === user.email) ? (
-                            <IconCircleDashedCheck className='text-green-500' />
-                          ) : (
-                            <></>
-                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -1,27 +1,70 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useRouter } from '@tanstack/react-router';
-import { IconCircleDashedCheck } from '@tabler/icons-react';
-import { Route } from '@/routes/_authenticated/project/detail.$id';
-import { ChevronLeft, Edit, Plus, Users, MoreVertical, Trash2, Activity, User } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { getChanges } from '@/utils/common';
-import { showErrorData, showSuccessData } from '@/utils/show-submitted-data';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Header } from '@/components/layout/header';
-import { Main } from '@/components/layout/main';
-import Request from '../request';
-import TeamManagement from './team';
-import { EditProjectDialog } from './ui/dialog';
-import { Timeline, TimelineItem, TimelineContent, TimelineDot, TimelineSeparator, TimelineConnector } from './ui/timeline';
-
+import { useEffect, useState } from 'react'
+import { useNavigate, useRouter } from '@tanstack/react-router'
+import { IconCircleDashedCheck } from '@tabler/icons-react'
+import { Route } from '@/routes/_authenticated/project/detail.$id'
+import {
+  ChevronLeft,
+  Edit,
+  Plus,
+  Users,
+  MoreVertical,
+  Trash2,
+  Activity,
+  User,
+  Search,
+  X,
+} from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
+import { getChanges } from '@/utils/common'
+import { showErrorData, showSuccessData } from '@/utils/show-submitted-data'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import Request from '../request'
+import TeamManagement from './team'
+import { EditProjectDialog } from './ui/dialog'
+import {
+  Timeline,
+  TimelineItem,
+  TimelineContent,
+  TimelineDot,
+  TimelineSeparator,
+  TimelineConnector,
+} from './ui/timeline'
 
 type Member = {
   id: string
@@ -29,6 +72,12 @@ type Member = {
   avatar?: string
   role: 'leader' | 'developer' | 'designer' | 'qa'
   joinedAt: string
+}
+
+// 搜索结果项类型
+type SearchResultItem = {
+  field: string
+  value: string | object // 值可以是字符串或对象，具体取决于搜索字段
 }
 
 export default function ProjectOverview() {
@@ -44,6 +93,39 @@ export default function ProjectOverview() {
   const [activities, setActivities] = useState<any>([])
   const [filteredUsers, setFilteredUsers] = useState<any>([])
   const [editOpen, setEditOpen] = useState(false)
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false) // 新增：搜索结果对话框状态
+  const [searchLoading, setSearchLoading] = useState(false) // 新增：搜索加载状态
+
+  const handleSearch = async () => {
+    if (!searchKeyword.trim()) return
+
+    setSearchLoading(true)
+    setSearchDialogOpen(false) // 先关闭对话框，准备加载新结果
+
+    try {
+      const { data } = await Request._Search(searchKeyword, id)
+      if (data && data.length > 0) {
+        setSearchResults(data)
+        setSearchDialogOpen(true)
+      } else {
+        showErrorData('未找到搜索结果')
+      }
+    } catch (error) {
+      console.error('搜索失败:', error)
+      showErrorData('搜索过程中发生错误')
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (searchKeyword === '') {
+      fetchProjectInfo()
+    }
+  }, [searchKeyword])
+
   const { history } = useRouter()
   const { id } = Route.useParams()
   const navigate = useNavigate()
@@ -56,12 +138,15 @@ export default function ProjectOverview() {
     role: 'developer' as const,
   })
   const [teams, setTeams] = useState<any>([])
+
   useEffect(() => {
     fetchProjectInfo()
   }, [])
+
   useEffect(() => {
     fetchUsers()
   }, [memberDialogOpen === true])
+
   const updateProject = async (data: any) => {
     const res = await Request._UpdateProject(id, data)
     if (res.data) {
@@ -71,6 +156,7 @@ export default function ProjectOverview() {
       console.error(res)
     }
   }
+
   const fetchProjectInfo = async () => {
     try {
       const res = await Request._GetProjectDetail(id)
@@ -106,6 +192,7 @@ export default function ProjectOverview() {
       console.error('Error fetching project info:', error)
     }
   }
+
   const fetchUsers = async () => {
     try {
       const response = await Request._GetUsers()
@@ -116,6 +203,7 @@ export default function ProjectOverview() {
       console.error('Failed to fetch users:', error)
     }
   }
+
   const handleAddMember = async () => {
     if (!newMember.email) return
 
@@ -206,6 +294,7 @@ export default function ProjectOverview() {
       console.error(res)
     }
   }
+
   const handleCreateNewTeam = async (
     name: string,
     description: string,
@@ -239,6 +328,7 @@ export default function ProjectOverview() {
     }
     setTeamDialogOpen(false)
   }
+
   const handleDeleteTeam = async (teamId: string) => {
     const res = await Request._DeleteProjectTeam(id, teamId)
     if (res.data) {
@@ -261,6 +351,7 @@ export default function ProjectOverview() {
       console.error(res)
     }
   }
+
   const handleUpdateTeam = async (
     editTeam: any,
     name: string,
@@ -313,6 +404,7 @@ export default function ProjectOverview() {
     }
     setTeamDialogOpen(false)
   }
+
   const handleAddTeamMember = async (team: any, memberData: string) => {
     const addTeamMembers = members.find(
       (member: any) => member.email === memberData
@@ -342,6 +434,7 @@ export default function ProjectOverview() {
     }
     setTeamMemberDialogOpen(false)
   }
+
   const handleConfirmAction = async (confirmDialog: any) => {
     const { member, team } = confirmDialog
     const isOwner = member.email === team.owner
@@ -385,6 +478,7 @@ export default function ProjectOverview() {
       console.error(res)
     }
   }
+
   const handleToggleExpand = (id: string) => {
     if (!teams) return
     setTeams(
@@ -393,6 +487,7 @@ export default function ProjectOverview() {
       )
     )
   }
+
   const handleEditProject = async (data: any) => {
     const formatData = {
       ...data,
@@ -433,6 +528,51 @@ export default function ProjectOverview() {
       console.error(res)
     }
   }
+
+  // 新增：格式化搜索结果显示
+  const formatSearchResult = (item: SearchResultItem) => {
+    const fieldLabels: Record<string, string> = {
+      Projectname: '项目名称',
+      Projectdescription: '项目描述',
+      member_email: '成员',
+      team_name: '小队名称',
+      team_owner: '小队负责人',
+      team_description: '小队描述',
+      team_member: '小队成员',
+      list_name: '列表名称',
+      list_owner: '列表负责人',
+      list_card: '卡片标题',
+      list_member: '列表成员',
+    }
+
+    const label = fieldLabels[item.field] || item.field
+
+    // 根据不同字段类型处理显示
+    if (item.field === 'Projectname' || item.field === 'Projectdescription') {
+      return { label, value: item.value }
+    } else if (item.field === 'member_email' || item.field === 'team_owner') {
+      return { label, value: item.value }
+    } else if (
+      item.field === 'team_name' ||
+      item.field === 'team_description'
+    ) {
+      return { label, value: item.value }
+    } else if (item.field === 'team_member' && typeof item.value === 'object') {
+      return {
+        label,
+        value: `${(item.value as { email: string; role: keyof typeof roleLabels }).email} (${roleLabels[(item.value as { role: keyof typeof roleLabels }).role]})`,
+      }
+    } else if (item.field === 'list_name' || item.field === 'list_owner') {
+      return { label, value: item.value }
+    } else if (item.field === 'list_card' && typeof item.value === 'object') {
+      return { label: '卡片标题', value: (item.value as any).title }
+    } else if (item.field === 'list_member' && typeof item.value === 'object') {
+      return { label: '列表成员', value: (item.value as any).email }
+    }
+
+    return { label, value: JSON.stringify(item.value) }
+  }
+
   const roleLabels = {
     owner: '项目负责人',
     leader: '组长',
@@ -445,13 +585,25 @@ export default function ProjectOverview() {
     <>
       <Header fixed>
         <div className='ml-auto flex w-full items-center justify-between space-x-4'>
-          <Button
-            variant='outline'
-            className='scale-80 !p-2'
-            onClick={() => history.go(-1)}
-          >
-            <ChevronLeft className='!h-5 !w-5' />
-          </Button>
+          <div className='flex items-center space-x-4'>
+            <Button
+              variant='outline'
+              className='scale-80 !p-2'
+              onClick={() => history.go(-1)}
+            >
+              <ChevronLeft className='!h-5 !w-5' />
+            </Button>
+            <div className='relative'>
+              <Input
+                placeholder='搜索项目内容'
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className='w-64 pr-4 pl-10'
+              />
+              <Search className='text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2' />
+            </div>
+          </div>
           <Button onClick={() => setEditOpen(true)}>
             <Edit className='mr-2 h-4 w-4' /> 编辑项目
           </Button>
@@ -687,6 +839,73 @@ export default function ProjectOverview() {
             </Card>
           </div>
         </div>
+
+        {/* 新增：搜索结果对话框 */}
+        <Dialog
+          open={searchDialogOpen}
+          onOpenChange={setSearchDialogOpen}
+          // className='w-full max-w-4xl'
+        >
+          <DialogContent className='h-[40rem] overflow-y-auto'>
+            <DialogHeader className='flex items-center justify-between'>
+              <DialogTitle>搜索结果: "{searchKeyword}"</DialogTitle>
+            </DialogHeader>
+
+            {searchLoading ? (
+              <div className='flex justify-center py-8'>
+                <div className='h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-blue-500'></div>
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className='flex flex-col items-center justify-center py-8 text-center'>
+                <div className='text-muted-foreground mb-4 text-3xl'>
+                  <Search />
+                </div>
+                <h3 className='text-lg font-medium'>未找到搜索结果</h3>
+                <p className='text-muted-foreground mt-2'>
+                  没有找到包含 "{searchKeyword}" 的项目内容
+                </p>
+              </div>
+            ) : (
+              <div className='space-y-4'>
+                {/* 按字段分组显示搜索结果 */}
+                {Object.entries(
+                  searchResults.reduce(
+                    (groups, item) => {
+                      const formattedItem = formatSearchResult(item)
+                      if (!groups[formattedItem.label]) {
+                        groups[formattedItem.label] = []
+                      }
+                      groups[formattedItem.label].push(formattedItem.value)
+                      return groups
+                    },
+                    {} as Record<string, any[]>
+                  )
+                ).map(([group, items]) => (
+                  <Card key={group}>
+                    <CardHeader>
+                      <CardTitle>{group}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='space-y-3'>
+                        {items.map((value, index) => (
+                          <div
+                            key={index}
+                            className='rounded-lg bg-gray-50 p-3'
+                          >
+                            <p className='text-sm'>{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+          <DialogFooter className='justify-end'>
+            <Button onClick={() => setSearchDialogOpen(false)}>关闭</Button>
+          </DialogFooter>
+        </Dialog>
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>

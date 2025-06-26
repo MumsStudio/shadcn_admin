@@ -3,9 +3,9 @@ import { IconCircleX } from '@tabler/icons-react'
 import { useReactFlow, NodeProps, Handle, Position } from '@xyflow/react'
 import { createPortal } from 'react-dom'
 import CardEditor from '@/features/word/components/card-components/CardEditor'
-import ListBoxContent from '../../word/components/card-components/ListBoxContent'
-import ListBoxFooter from '../../word/components/card-components/ListBoxFooter'
-import { Card as CardType } from '../../word/components/types'
+import ListBoxContent from '../../../word/components/card-components/ListBoxContent'
+import ListBoxFooter from '../../../word/components/card-components/ListBoxFooter'
+import { Card as CardType } from '../../../word/components/types'
 
 interface CardNodeData {
   label?: string
